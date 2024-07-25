@@ -174,6 +174,16 @@
       of your accepting any such warranty or additional liability.
 
    END OF TERMS AND CONDITIONS
+  
+   EXCEPTION: NEX Compiler Project
+
+   As a special exception, you have permission to link the code of this project 
+   (as well as its derivatives) with the NEX Intermediate Representation (NEX-IR) 
+   library and distribute linked combinations including the two. You must obey the 
+   terms of the Apache License in all respects for all of the code used other than 
+   NEX-IR. If you modify this file, you may extend this exception to your version 
+   of the file, but you are not obligated to do so. If you do not wish to do so, 
+   delete this exception statement from your version.
 
    APPENDIX: How to apply the Apache License to your work.
 
