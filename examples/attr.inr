@@ -1,0 +1,39 @@
+; half assed impl for https://github.com/nex-lang/compiler/blob/v-beta/examples/attr.nex
+
+define i32 @play_text_to_voice() {
+entry:
+    ret i32 19
+}
+
+@Hominoldea = type { i8*, i8*, i8* }
+
+define void @Hominoldea_init(%Hominoldea* %self, i8* %sub_family, i8* %genus, i8* %species) {
+entry:
+    store i8* %sub_family, i8** getelementptr (%Hominoldea, %Hominoldea* %self, i32 0, i32 0)
+    store i8* %genus, i8** getelementptr (%Hominoldea, %Hominoldea* %self, i32 0, i32 1)
+    store i8* %species, i8** getelementptr (%Hominoldea, %Hominoldea* %self, i32 0, i32 2)
+    ret void
+}
+
+@Homo = type { %Hominoldea, i8* }
+
+define void @Homo_init(%Homo* %self, i8* %sub_family, i8* %genus) {
+entry:
+    call void @Hominoldea_init(%Hominoldea* getelementptr (%Homo, %Homo* %self, i32 0, i32 0), %sub_family, %genus, null)
+    store i8* %sub_family, i8** getelementptr (%Homo, %Homo* %self, i32 0, i32 1)
+    ret void
+}
+
+define i32 @Homo_add(%Homo* %self, i32 %a, i32 %b) {
+entry:
+    %result = add i32 %a, %b
+    ret i32 %result
+}
+
+@Talk = type { }
+
+define void @talk(%Talk* %self, i8* %words) {
+entry:
+    call i32 @play_text_to_voice(i8* %words)
+    ret void
+}

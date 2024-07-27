@@ -1,0 +1,1 @@
+/usr/bin/cc  -Wall -g CMakeFiles/nex.dir/src/main.c.o CMakeFiles/nex.dir/src/x86.c.o -o nex 

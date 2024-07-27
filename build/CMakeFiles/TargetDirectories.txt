@@ -1,0 +1,3 @@
+/home/tanshu/Desktop/nex-lang/mlinr/build/CMakeFiles/nex.dir
+/home/tanshu/Desktop/nex-lang/mlinr/build/CMakeFiles/edit_cache.dir
+/home/tanshu/Desktop/nex-lang/mlinr/build/CMakeFiles/rebuild_cache.dir

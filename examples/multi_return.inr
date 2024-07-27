@@ -1,0 +1,21 @@
+define { i32, union { { double, float }, { float, double } } } @returns_two_double_or_float() {
+entry:
+    %tuple1 = insertvalue { double, float } undef, double 1.1, 0
+    %tuple1 = insertvalue { double, float } %tuple1, float 1.1, 1
+
+    %return_value = insertvalue { i32, union { { double, float }, { float, double } } } undef, i32 0, 0
+    %return_value = insertvalue { i32, union { { double, float }, { float, double } } } %return_value, { double, float } %tuple1, 1
+
+    ret { i32, union { { double, float }, { float, double } } } %return_value
+}
+
+define i32 @main() {
+entry:
+    %result = call { i32, union { { double, float }, { float, double } } } @returns_two_double_or_float()
+
+    %tag = extractvalue { i32, union { { double, float }, { float, double } } } %result, 0
+
+    %value = extractvalue { i32, union { { double, float }, { float, double } } } %result, 1
+    
+    ret i32 0
+}
