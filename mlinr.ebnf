@@ -1,0 +1,78 @@
+(* Syntax for LLVM IR *)
+
+(* Top-Level Module *)
+module         = { declaration } ;
+
+(* Declarations *)
+declaration    = function_declaration | global_variable_declaration | type_declaration ;
+
+(* Function Declaration *)
+function_declaration = "define" function_signature "{" { basic_block } "}" ;
+
+function_signature = return_type function_name "(" [ parameter_list ] ")" ;
+return_type      = type ;
+function_name    = identifier ;
+
+parameter_list   = parameter { "," parameter } ;
+parameter        = type identifier ;
+
+(* Basic Block *)
+basic_block     = label ":" { instruction } [ terminator ] ;
+
+label            = "%" identifier ;
+
+(* Instructions *)
+instruction      = assignment | binary_operation | call_instruction | load_instruction | store_instruction | phi_instruction | cast_instruction | other_instruction ;
+
+assignment       = result_name "=" operation ;
+operation        = binary_operation | call_instruction | load_instruction | store_instruction | phi_instruction | cast_instruction ;
+
+result_name      = "%" identifier ;
+binary_operation = type identifier binary_operator type identifier ;
+binary_operator  = "+" | "-" | "*" | "/" | "==" | "!=" | "<" | ">" ;
+
+call_instruction = "call" return_type function_name "(" [ argument_list ] ")" ;
+load_instruction = "load" type "," type pointer_value ;
+store_instruction = "store" type value "," type pointer_value ;
+phi_instruction  = "phi" type "[" { value "," label } "]" ;
+cast_instruction = "trunc" | "zext" | "sext" | "fptrunc" | "fpext" | "uitofp" | "sitofp" | "fptosi" | "fptoui" | "bitcast" type "," type value ;
+
+other_instruction = "br" condition label "," label
+                   | "switch" value "," label "[" { value "," label } "]"
+                   | "indirectbr" value "," label "[" { value "," label } "]"
+                   | "invoke" return_type function_name "(" [ argument_list ] ")" "to" label "catch" label
+                   | "resume" value
+                   | "unreachable"
+                   | "extractelement" type value "," value
+                   | "insertelement" type value "," value "," value
+                   | "shufflevector" type value "," value "," value
+                   | "extractvalue" type value "," { index }
+                   | "insertvalue" type value "," value "," { index } ;
+
+argument_list    = value { "," value } ;
+value            = identifier | constant ;
+
+(* Global Variable Declaration *)
+global_variable_declaration = "@" identifier "=" "global" type constant ;
+
+(* Type Declarations *)
+type_declaration = "type" type_definition ;
+type_definition  = "{" { type } "}" | "i" bitwidth | "float" | "double" | "void" ;
+
+(* Constants *)
+constant         = integer_constant | float_constant | null_constant | true_constant | false_constant ;
+
+integer_constant = "i" bitwidth integer_value ;
+float_constant   = float_value ;
+null_constant    = "null" ;
+true_constant    = "true" ;
+false_constant   = "false" ;
+
+bitwidth         = digit { digit } ;
+integer_value    = digit { digit } ;
+float_value      = digit { digit } "." digit { digit } ;
+
+(* Miscellaneous *)
+identifier       = letter { letter | digit } ;
+letter           = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" | "_" ;
+digit            = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
