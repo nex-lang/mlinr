@@ -16,7 +16,7 @@ MLINR is an open-source project, and contributions are welcome. If you're intere
 
 ## License
 
-MLINR is licensed under the [MIT License](LICENSE.md). See the LICENSE.md file for details.
+MLINR is licensed under the [Apache v2 License](LICENSE.md). See the LICENSE.md file for details.
 
 ## Contact
 
