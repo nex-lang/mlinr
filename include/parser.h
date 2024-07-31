@@ -8,6 +8,7 @@
 typedef struct Parser {
     Lexer* lexer;
     Token* cur;
+
     AST_Node* tree;
     AST_Node* root;
     SymTable* tbl;
@@ -21,5 +22,8 @@ void parser_free(Parser* parser);
 bool parser_expect(Parser* parser, uint8_t expected);
 void parser_consume(Parser* parser);
 
+void parser_parse(Parser* parser);
+
+AST_Node* parser_parse_define(Parser* parser);
 
 #endif // PARSER_H

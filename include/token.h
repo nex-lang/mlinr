@@ -1,7 +1,7 @@
 #ifndef TOKEN_H
 #define TOKEN_H
 
-#define NO_OF_KEYWORDS 44
+#define NO_OF_KEYWORDS 51
 #define KEYWORDS keywords
 #define MAX_KEYWORD_LEN 14
 
@@ -9,6 +9,9 @@
 
 #define MAX_FLOAT_LIT_DIGITS 9
 #define MAX_DOUBLE_LIT_DIGITS 17
+
+#define IS_TYPEKW(type) \
+    (((type) >= TOK_I8 && (type) <= TOK_U64))
 
 typedef struct Token {
     unsigned int line, col;
@@ -54,10 +57,18 @@ typedef struct Token {
         TOK_GETELEMENTPTR,  // getelementptr (pointer arithmetic instruction)
         TOK_GE,             // ge (comparison operation)
         TOK_GLOBAL,        // global (for global variables)
+        TOK_I1,            // i1 (1-bit integer type)
         TOK_I8,            // i8 (8-bit integer type)
         TOK_I16,           // i16 (16-bit integer type)
         TOK_I32,           // i32 (32-bit integer type)
         TOK_I64,           // i64 (64-bit integer type)
+        TOK_U8,            // u8 (8-bit unsigned integer type)
+        TOK_U16,           // u16 (16-bit unsigned integer type)
+        TOK_U32,           // u32 (32-bit unsigned integer type)
+        TOK_U64,           // u64 (64-bit unsigned integer type)
+        TOK_F16,           // f16  (half precision)
+        TOK_F32,           // f32  (float precision)
+        TOK_F64,           // f64  (double precision) 
         TOK_INVOKE,        // invoke (invoke instruction)
         TOK_LOAD,          // load (load instruction)
         TOK_LABEL,         // label (used for basic block labels)

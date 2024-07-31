@@ -56,9 +56,22 @@ typedef struct AST_Operand {
     } value;
 } AST_Operand;
 
+typedef struct InstrDefine {
+    char* id;
+    int type;
+
+    struct args {
+        size_t size;
+        char** id;
+        int* type;
+    } args;
+} InstrDefine;
+
+
 typedef struct AST_Instruction {
     enum {
         INSTR_BINARY_OP,
+        INSTR_DEFINE,
         INSTR_RETURN,
         INSTR_CALL,
     } type;
@@ -82,6 +95,7 @@ typedef struct AST_Instruction {
                 size_t size;
             } args;
         } call;
+        InstrDefine define;
     } data;
 } AST_Instruction;
 
@@ -90,6 +104,7 @@ typedef enum NodeTypes {
     FUNCTION,
     BLOCK,
     INSTRUCTION,
+    ROOT
 } NodeTypes;
 
 
