@@ -1,7 +1,7 @@
 #ifndef TOKEN_H
 #define TOKEN_H
 
-#define NO_OF_KEYWORDS 51
+#define NO_OF_KEYWORDS 52
 #define KEYWORDS keywords
 #define MAX_KEYWORD_LEN 14
 
@@ -12,6 +12,9 @@
 
 #define IS_TYPEKW(type) \
     (((type) >= TOK_I8 && (type) <= TOK_U64))
+
+#define IS_LITERAL(type) \
+    (((type) >= TOK_L_SSINT && (type) <= TOK_L_SIZE))
 
 typedef struct Token {
     unsigned int line, col;

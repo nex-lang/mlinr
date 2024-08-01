@@ -46,4 +46,6 @@ Symbol* symtbl_lookup(SymTable* table, int32_t id) {
         }
         current = current->next;
     }
+
+    return current;
 }

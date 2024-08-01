@@ -354,6 +354,12 @@ Token* lexer_handle_1char(Lexer* lexer) {
         case ']':
             lexer_advance(lexer, 1); return lexer_token_init(lexer, "]", TOK_RBRACK);
             break;
+        case '\'':
+            return lexer_process_single_quote(lexer);
+            break;
+        case '\"':
+            return lexer_process_double_quote(lexer);
+            break;
         default:
             break;
     }
@@ -432,6 +438,7 @@ uint8_t lexer_process_decimal_type(char* buf, uint8_t diadc) {
 
     return TOK_ERROR;
 }
+
 
 int is_within_int_range(int128_t val, int128_t min, int128_t max) {
     if (val.high > max.high || (val.high == max.high && val.low > max.low)) {
@@ -523,6 +530,58 @@ uint8_t lexer_process_int_type(char* buf) {
     }
 
     return TOK_ERROR;
+}
+
+Token* lexer_process_single_quote(Lexer* lexer) {
+    lexer_advance(lexer, 1); // consume '
+
+    char* value = calloc(2, sizeof(char));
+    if (!value) {
+        exit(EXIT_FAILURE);
+    }
+    value[0] = lexer->c;
+    value[1] = '\0';
+
+    lexer_advance(lexer, 1); // consume char
+
+    if (lexer->c == '\'') {
+        lexer_advance(lexer, 1); // consume '
+        return lexer_token_init(lexer, value, TOK_L_CHAR);
+    }
+
+    REPORT_ERROR(lexer, "E_CHAR_TERMINATOR");
+    lexer_handle_error(lexer);
+    return lexer_next_token(lexer);
+}
+
+Token* lexer_process_double_quote(Lexer* lexer) {
+    lexer_advance(lexer, 1); // consume "
+    
+    char* value = calloc(1, sizeof(char) + 1);
+
+    if (!value) {
+        exit(EXIT_FAILURE);
+    }
+
+    while (lexer->c != '"' && lexer->c != '\0') {
+        value = realloc(value, (strlen(value) + 2) * sizeof(char));
+            
+        if (!value) {
+            exit(EXIT_FAILURE);
+        }
+            
+        strncat(value, &(lexer->c), 1);
+        lexer_advance(lexer, 1); // consume char
+    }
+
+    if (lexer->c == '"') {
+        lexer_advance(lexer, 1);
+        return lexer_token_init(lexer, value, TOK_L_STRING);
+    }
+
+    REPORT_ERROR(lexer, "E_STRING_TERMINATOR");
+    lexer_handle_error(lexer);
+    return lexer_next_token(lexer);
 }
 
 

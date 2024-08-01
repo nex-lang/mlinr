@@ -2,47 +2,69 @@
 #define AST_H
 
 #include <stdbool.h>
-
 #include <stdlib.h>
 #include <inttypes.h>
-#include <stdbool.h>
 
-// Forward declarations
 typedef struct AST_Node AST_Node;
 typedef struct AST_Module AST_Module;
-typedef struct AST_Function AST_Function;
-typedef struct AST_BasicBlock AST_BasicBlock;
 typedef struct AST_Instruction AST_Instruction;
 typedef struct AST_Operand AST_Operand;
+typedef struct AST_Block AST_Block;
+typedef struct AST_PrimInstruction AST_PrimInstruction;
+
+typedef struct AST_Block {
+    AST_Instruction* instructions;
+    size_t size;
+} AST_Block;
+
+typedef struct PrimInstrDefine {
+    char* id;
+    int type;
+
+    struct args {
+        size_t size;
+        char** id;
+        int* type;
+    } args;
+
+    AST_Block block; // This can now be properly resolved
+} PrimInstrDefine;
+
+typedef struct AST_PrimInstruction {
+    enum {
+        PINSTR_DEFINE,
+    } type;
+
+    union {
+        PrimInstrDefine define;
+    } data;
+} AST_PrimInstruction;
 
 typedef struct AST_Module {
     char* identifier;
     struct {
-        AST_Function** functions;
+        AST_PrimInstruction** instr;
         size_t size;
     } functions;
 } AST_Module;
 
-typedef struct AST_Function {
-    char* identifier;
-    char* return_type;
-    struct {
-        char** params;
-        size_t size;
-    } params;
-    struct {
-        AST_BasicBlock** basic_blocks;
-        size_t size;
-    } basic_blocks;
-} AST_Function;
-
-typedef struct AST_BasicBlock {
-    char* identifier;
-    struct {
-        AST_Instruction** instructions;
-        size_t size;
-    } instructions;
-} AST_BasicBlock;
+typedef struct AST_Literal {
+    int type;
+    union {
+        struct {
+            int64_t norm;
+        } int_;
+        struct {
+            uint64_t norm;
+        } uint;
+        struct {
+            float bit32;
+            double bit64;
+        } float_;
+        char character;
+        char* string;
+    } value;
+} AST_Literal;
 
 typedef struct AST_Operand {
     enum {
@@ -56,17 +78,14 @@ typedef struct AST_Operand {
     } value;
 } AST_Operand;
 
-typedef struct InstrDefine {
-    char* id;
-    int type;
+typedef union InstrAlloca {
+    struct {
+        AST_Literal n;
+        size_t unit;
+    } mult;
 
-    struct args {
-        size_t size;
-        char** id;
-        int* type;
-    } args;
-} InstrDefine;
-
+    AST_Literal sg;
+} InstrAlloca;
 
 typedef struct AST_Instruction {
     enum {
@@ -74,6 +93,7 @@ typedef struct AST_Instruction {
         INSTR_DEFINE,
         INSTR_RETURN,
         INSTR_CALL,
+        INSTR_ALLOCA
     } type;
 
     union {
@@ -95,26 +115,24 @@ typedef struct AST_Instruction {
                 size_t size;
             } args;
         } call;
-        InstrDefine define;
+
+        InstrAlloca alloca;
     } data;
 } AST_Instruction;
 
 typedef enum NodeTypes {
     MODULE,
-    FUNCTION,
-    BLOCK,
     INSTRUCTION,
+    PRIM_INSTRUCTION,
     ROOT
 } NodeTypes;
-
 
 struct AST_Node {
     NodeTypes type;
 
     union {
         AST_Module module;
-        AST_Function function;
-        AST_BasicBlock basic_block;
+        AST_PrimInstruction pinstruction;
         AST_Instruction instruction;
     } data;
 

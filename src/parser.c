@@ -58,9 +58,7 @@ void parser_parse(Parser* parser) {
     while (parser->cur->type != TOK_EOF) {
         switch (parser->cur->type) {
         case TOK_DEFINE:
-            parser->tree->right = parser_parse_define(parser);
-            printf("NAME: %s\n", parser->tree->right->data.instruction.data.define.id);
-            printf("TYPE: %d\n", parser->tree->right->data.instruction.data.define.type);
+            
             break;        
         default:
             break;
@@ -76,14 +74,127 @@ void parser_parse(Parser* parser) {
     }   
 }
 
-AST_Node* parser_parse_define(Parser* parser) {
+
+AST_Block parser_parse_instructions(Parser* parser) {
+    AST_Block block;
+    AST_Instruction instr;
+
+    block.instructions = malloc(sizeof(AST_Instruction));
+    block.size = 0;
+
+    while (parser->cur->type != TOK_RBRACK) {
+        instr = parser_parse_instruction(parser);
+
+        block.instructions[block.size] = instr;
+        
+        block.size++;
+        block.instructions = realloc(block.instructions, sizeof(AST_Instruction) * block.size);
+    }
+
     parser_consume(parser);
 
-    InstrDefine instr;
+    return block;
+}
+
+
+AST_Node* parser_parse_pinstruction(Parser* parser);
+
+
+AST_Instruction parser_parse_instruction(Parser* parser) {
+    AST_Instruction instr;
+    switch (parser->cur->type) {
+    case TOK_ALLOCA:
+        instr.type = INSTR_ALLOCA;
+        instr.data.alloca = parser_parse_alloca(parser);
+        break;
+    default:
+        break;
+    }
+
+    return instr;
+}
+
+AST_Literal parser_parse_literal(Parser* parser) {
+    AST_Literal lit;
+    char *endptr;
+
+    if (!IS_LITERAL(parser->cur->type)) {
+        lit.type = -1;
+        return lit;
+    }
+
+    lit.type = parser->cur->type;
+
+    switch (lit.type) {
+        case TOK_L_SSINT:
+        case TOK_L_SINT:
+        case TOK_L_INT:
+        case TOK_L_LINT:
+            lit.value.int_.norm = (int64_t)strtol(parser->cur->value, &endptr, 10);
+            break;
+        case TOK_L_SSUINT:
+        case TOK_L_SUINT:
+        case TOK_L_UINT:
+        case TOK_L_LUINT:
+            lit.value.uint.norm = (uint64_t)strtoul(parser->cur->value, &endptr, 10);
+            break;
+        case TOK_L_FLOAT:
+            lit.value.float_.bit32 = strtof(parser->cur->value, &endptr);
+            break;
+        case TOK_L_DOUBLE:
+            lit.value.float_.bit64 = strtod(parser->cur->value, &endptr);
+            break;
+        case TOK_L_CHAR:
+            lit.value.character = (parser->cur->value[0] != '\0') ? parser->cur->value[0] : '\0';
+            break;
+        case TOK_L_STRING:
+            lit.value.string = parser->cur->value;
+            break;
+        default: lit.type = -1; return lit; break;
+    }
+
+
+    parser_consume(parser);
+    return lit;
+}
+
+
+InstrAlloca parser_parse_alloca(Parser* parser) {
+    /*
+    alloca <element type>, <number of elements>
+    alloca <mem> 
+    */
+    parser_consume(parser);
+
+    InstrAlloca instr;
+
+    if (IS_TYPEKW(parser->cur->type)) {
+        instr.mult.unit = parser->cur->type;
+        
+        if (!parser_expect(parser, TOK_COMMA)) {
+            REPORT_ERROR(parser->lexer, "E_COMMA_AF_TOFMEM");
+            return instr;
+        }
+
+        instr.mult.n = parser_parse_literal(parser);
+        return instr;
+    }
+
+    instr.sg = parser_parse_literal(parser);
+    return instr;
+}
+
+
+
+PrimInstrDefine parser_parse_define(Parser* parser) {
+    parser_consume(parser);
+
+    PrimInstrDefine instr;
 
     if (!parser_expect(parser, TOK_AT)) {
         REPORT_ERROR(parser->lexer, "E_SYMBOL_AF_DEFINEKW");
-        return NULL;
+        instr.id = "\0";
+        return instr;
     }
 
     if (parser->cur->type == TOK_IDEN) {
@@ -101,7 +212,8 @@ AST_Node* parser_parse_define(Parser* parser) {
 
     if (!parser_expect(parser, TOK_LPAREN)) {
         REPORT_ERROR(parser->lexer, "E_SYMBOL_PARAMS");
-        return NULL;
+        instr.id = "\0";
+        return instr;
     }
 
     instr.args.id = malloc(sizeof(char*));
@@ -122,7 +234,8 @@ AST_Node* parser_parse_define(Parser* parser) {
 
         if (!parser_expect(parser, TOK_COLON)) {
             REPORT_ERROR(parser->lexer, "E_COLON_TO_SPEC_TYPE");
-            return NULL;
+            instr.id = "\0";
+            return instr;
         }
 
         instr.args.id[instr.args.size] = parser->cur->value;
@@ -136,11 +249,7 @@ AST_Node* parser_parse_define(Parser* parser) {
 
     }
 
-    parser_consume(parser); // consumes RPAREN
+    parser_consume(parser);
 
-    AST_Node* n = ast_init(INSTRUCTION);
-    n->data.instruction.data.define = instr;
-    n->data.instruction.type = INSTR_DEFINE;
-
-    return n;
+    return instr;
 }
