@@ -51,12 +51,8 @@ typedef struct AST_Module {
 typedef struct AST_Literal {
     int type;
     union {
-        struct {
-            int64_t norm;
-        } int_;
-        struct {
-            uint64_t norm;
-        } uint;
+        int64_t int_;
+        uint64_t uint;
         struct {
             float bit32;
             double bit64;

@@ -24,12 +24,10 @@ void parser_consume(Parser* parser);
 
 void parser_parse(Parser* parser);
 
-
 AST_Block parser_parse_instructions(Parser* parser);
 AST_Node* parser_parse_pinstruction(Parser* parser);
 
 AST_Literal parser_parse_literal(Parser* parser);
-
 
 AST_Instruction parser_parse_instruction(Parser* parser);
 InstrAlloca parser_parse_alloca(Parser* parser);

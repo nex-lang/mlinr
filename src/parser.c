@@ -130,13 +130,13 @@ AST_Literal parser_parse_literal(Parser* parser) {
         case TOK_L_SINT:
         case TOK_L_INT:
         case TOK_L_LINT:
-            lit.value.int_.norm = (int64_t)strtol(parser->cur->value, &endptr, 10);
+            lit.value.int_ = (int64_t)strtol(parser->cur->value, &endptr, 10);
             break;
         case TOK_L_SSUINT:
         case TOK_L_SUINT:
         case TOK_L_UINT:
         case TOK_L_LUINT:
-            lit.value.uint.norm = (uint64_t)strtoul(parser->cur->value, &endptr, 10);
+            lit.value.uint = (uint64_t)strtoul(parser->cur->value, &endptr, 10);
             break;
         case TOK_L_FLOAT:
             lit.value.float_.bit32 = strtof(parser->cur->value, &endptr);
