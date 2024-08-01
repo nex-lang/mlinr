@@ -56,6 +56,7 @@ void parser_consume(Parser* parser) {
 
 void parser_parse(Parser* parser) {
     while (parser->cur->type != TOK_EOF) {
+        parser_parse_instructions(parser);
         switch (parser->cur->type) {
         case TOK_DEFINE:
             
@@ -82,16 +83,27 @@ AST_Block parser_parse_instructions(Parser* parser) {
     block.instructions = malloc(sizeof(AST_Instruction));
     block.size = 0;
 
-    while (parser->cur->type != TOK_RBRACK) {
+
+    while (1) {
+        if (parser->cur->type == TOK_RBRACK || parser->cur->type == TOK_EOF) {
+            break;
+        }
+        
         instr = parser_parse_instruction(parser);
+
+        block.instructions = realloc(block.instructions, (sizeof(AST_Instruction) * (block.size + 1)));
+
+        if (block.instructions == NULL) {
+            fprintf(stderr, "Memory allocation error\n");
+            exit(EXIT_FAILURE);
+        }
 
         block.instructions[block.size] = instr;
         
-        block.size++;
-        block.instructions = realloc(block.instructions, sizeof(AST_Instruction) * block.size);
+        block.size += 1;
     }
 
-    parser_consume(parser);
+    parser_expect(parser, TOK_RBRACK);
 
     return block;
 }
@@ -99,20 +111,6 @@ AST_Block parser_parse_instructions(Parser* parser) {
 
 AST_Node* parser_parse_pinstruction(Parser* parser);
 
-
-AST_Instruction parser_parse_instruction(Parser* parser) {
-    AST_Instruction instr;
-    switch (parser->cur->type) {
-    case TOK_ALLOCA:
-        instr.type = INSTR_ALLOCA;
-        instr.data.alloca = parser_parse_alloca(parser);
-        break;
-    default:
-        break;
-    }
-
-    return instr;
-}
 
 AST_Literal parser_parse_literal(Parser* parser) {
     AST_Literal lit;
@@ -158,12 +156,56 @@ AST_Literal parser_parse_literal(Parser* parser) {
     return lit;
 }
 
+AST_Operand parser_parse_op(Parser* parser) {
+    AST_Operand op = (AST_Operand){0};
+
+    AST_Literal lit = parser_parse_literal(parser);
+    if (lit.type != -1) {
+        op.type = OPERAND_LITERAL;
+        op.value.literal = lit;
+        return op;
+    }
+
+    if (!parser_expect(parser, TOK_PER)) {
+        return op;
+    }
+
+    if (parser->cur->type != TOK_IDEN) {
+        return op; 
+    }
+
+
+    op.type = OPERAND_VARIABLE;
+    op.value.variable = parser->cur->value;
+    parser_consume(parser);
+
+    return op;
+}
+
+
+AST_Instruction parser_parse_instruction(Parser* parser) {
+    AST_Instruction instr;
+    switch (parser->cur->type) {
+    case TOK_ALLOCA:
+        instr.type = INSTR_ALLOCA;
+        instr.data.alloca = parser_parse_alloca(parser);
+        break;
+    default:
+        instr.type = INSTR_BINARY_OP;
+        instr.data.bin =  parser_parse_binop(parser);
+        break;
+    }
+
+    return instr;
+}
+
 
 InstrAlloca parser_parse_alloca(Parser* parser) {
     /*
     alloca <element type>, <number of elements>
     alloca <mem> 
     */
+
     parser_consume(parser);
 
     InstrAlloca instr;
@@ -176,14 +218,92 @@ InstrAlloca parser_parse_alloca(Parser* parser) {
             return instr;
         }
 
-        instr.mult.n = parser_parse_literal(parser);
+        instr.mult.n = parser_parse_op(parser);
         return instr;
     }
 
-    instr.sg = parser_parse_literal(parser);
+    instr.sg = parser_parse_op(parser);
     return instr;
 }
 
+InstrBinOp parser_parse_binop(Parser* parser) {
+    /*
+    <pre_op> op <result type> <o1>, <o2>
+    */
+
+    InstrBinOp instr;
+    uint8_t cmp_prefix = 0;
+
+    if (parser->cur->type == TOK_ICMP) {
+        cmp_prefix = 1;
+        parser_consume(parser);
+    } else if (parser->cur->type == TOK_FCMP) {
+        cmp_prefix = 2;
+        parser_consume(parser);
+    }
+
+    if ((!IS_PBOP(parser->cur->type)) && cmp_prefix > 0) {
+        REPORT_ERROR(parser->lexer, "E_CMP_AFTYPE");
+        return instr;
+    }
+
+    if (!IS_PBOP(parser->cur->type)) {
+        return instr;
+    }
+
+    if (cmp_prefix == 2) {
+        switch (parser->cur->type) {
+            case TOK_EQ:
+                instr.type = TOK_fEQ;
+                break;
+            case TOK_NE:
+                instr.type = TOK_fNE;
+                break;
+            case TOK_GT:
+                instr.type = TOK_fGT;
+                break;
+            case TOK_GE:
+                instr.type = TOK_fGE;
+                break;
+            case TOK_LT:
+                instr.type = TOK_fLT;
+                break;
+            case TOK_LE:
+                instr.type = TOK_fLE;
+                break;
+            default:
+                break;
+        }
+    } else {
+        instr.type = parser->cur->type;
+    }
+
+    parser_consume(parser);
+
+    if (!IS_TYPEKW(parser->cur->type)) {
+        REPORT_ERROR(parser->lexer, "E_TYPE_KW");
+        return instr;
+    }
+
+    instr.size = parser->cur->type;
+    parser_consume(parser);
+
+
+    instr.o1 = parser_parse_op(parser);
+
+
+    if (!parser_expect(parser, TOK_COMMA)) {
+        REPORT_ERROR(parser->lexer, "E_COMMA_AF_BINOP");
+        return instr;
+    }
+
+
+    instr.o2 = parser_parse_op(parser);
+
+    printf("%ld, %ld\n", instr.size, instr.type);
+
+    return instr;
+}
 
 
 PrimInstrDefine parser_parse_define(Parser* parser) {

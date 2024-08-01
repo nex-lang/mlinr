@@ -1,1 +1,1 @@
-define @main i32() 
+add i32 %a, %b

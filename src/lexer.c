@@ -6,12 +6,14 @@
 
 
 char* keywords[NO_OF_KEYWORDS] = {
-    "add", "alloca", "bitcast", "br", "call", "cast", "cond", "declaration", "define", "div",
-    "double", "fpext", "fptoui", "fptosi", "float", "function", "getelementptr", "ge", "global", "i1", "i8",
-    "i16", "i32", "i64", "u8", "u16", "u32", "u64", "f16", "f32", "f64", "invoke", "load", "label", "le", "mul", "ne", "nswitch",
-    "phinode", "pointer", "ret", "resume", "sext", "store", "struct", "switch", "trunc", "type",
-    "uitofp", "union", "unreachable", "zext"
+    "add", "alloca", "bitcast", "br", "call", "cast", "cond", "declaration", "define", "double",
+    "eq", "fpext", "fptoui", "fptosi", "float", "function", "ge", "gt", "global", "getelementptr", "i1", "i8",
+    "i16", "i32", "i64", "f16", "f32", "f64", "u8", "u16", "u32", "u64", "land", "lnand", "lnor", "lnot",
+    "lor", "load", "label", "le", "lt", "mul", "ne", "nswitch", "or", "phinode", "pointer",
+    "ret", "resume", "sdiv", "sext", "shl", "shr", "sub", "store", "struct", "switch", "trunc", "type",
+    "uitofp", "union", "unreachable", "udiv", "xor", "zext", "icmp", "fcmp"
 };
+
 
 Lexer* lexer_init(char* filename) {
     /*
@@ -231,11 +233,16 @@ Token* lexer_handle_alpha(Lexer* lexer) {
     }
 
     uint8_t KWCHAR_TYPE_MAP[NO_OF_KEYWORDS] = {
-        TOK_ADD, TOK_ALLOCA, TOK_BITCAST, TOK_BR, TOK_CALL, TOK_CAST, TOK_COND, TOK_DECLARATION, TOK_DEFINE, TOK_DIV,
-        TOK_DOUBLE, TOK_FPEXT, TOK_FPTOUI, TOK_FPTOSI, TOK_FLOAT, TOK_FUNC, TOK_GETELEMENTPTR, TOK_GE, TOK_GLOBAL, TOK_I1, TOK_I8,
-        TOK_I16, TOK_I32, TOK_I64, TOK_U8, TOK_U16, TOK_U32, TOK_U64, TOK_F16, TOK_F32, TOK_F64, TOK_INVOKE, TOK_LOAD, TOK_LABEL, TOK_LE, TOK_MUL, TOK_NE, TOK_NSWITCH, TOK_PHINODE,
-        TOK_POINTER, TOK_RETURN, TOK_RESUME, TOK_SEXT, TOK_STORE, TOK_STRUCT, TOK_SWITCH, TOK_TRUNC, TOK_TYPE, TOK_UITOFP,
-        TOK_UNION, TOK_UNREACHABLE, TOK_ZEXT
+        TOK_ADD, TOK_ALLOCA, TOK_BITCAST, TOK_BR, TOK_CALL, TOK_CAST, TOK_COND, 
+        TOK_DECLARATION, TOK_DEFINE, TOK_DOUBLE, TOK_EQ, TOK_FPEXT, TOK_FPTOUI, 
+        TOK_FPTOSI, TOK_FLOAT, TOK_FUNC, TOK_GE, TOK_GT, TOK_GLOBAL,
+        TOK_GETELEMENTPTR, TOK_I1, TOK_I8, TOK_I16, TOK_I32, TOK_I64,
+        TOK_F16, TOK_F32, TOK_F64, TOK_U8, TOK_U16, TOK_U32,
+        TOK_U64, TOK_LAND, TOK_LNAND, TOK_LNOR, TOK_LNOT, TOK_LOR,
+        TOK_LOAD, TOK_LABEL, TOK_LE, TOK_LT, TOK_MUL, TOK_NE, TOK_NSWITCH, TOK_OR,
+        TOK_PHINODE, TOK_POINTER, TOK_RETURN, TOK_RESUME, TOK_SDIV, TOK_SEXT, TOK_SHL, TOK_SHR, TOK_SUB,
+        TOK_STORE, TOK_STRUCT, TOK_SWITCH, TOK_TRUNC, TOK_TYPE, TOK_UITOFP, TOK_UNION,
+        TOK_UNREACHABLE, TOK_UDIV, TOK_XOR, TOK_ZEXT, TOK_ICMP, TOK_FCMP
     };
 
     for (uint8_t i = 0; i < NO_OF_KEYWORDS - 1; i++) {
@@ -313,7 +320,7 @@ Token* lexer_handle_1char(Lexer* lexer) {
             lexer->cc = 1;
             break;
         case '=':
-            lexer_advance(lexer, 1); return lexer_token_init(lexer, "=", TOK_EQ);
+            lexer_advance(lexer, 1); return lexer_token_init(lexer, "=", TOK_SEQ);
             break;
         case ',':
             lexer_advance(lexer, 1); return lexer_token_init(lexer, ",", TOK_COMMA);

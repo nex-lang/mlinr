@@ -69,19 +69,26 @@ typedef struct AST_Operand {
     } type;
 
     union {
-        int64_t literal;
+        AST_Literal literal;
         char* variable;
     } value;
 } AST_Operand;
 
 typedef union InstrAlloca {
     struct {
-        AST_Literal n;
+        AST_Operand n;
         size_t unit;
     } mult;
 
-    AST_Literal sg;
+    AST_Operand sg;
 } InstrAlloca;
+
+typedef struct InstrBinOp {
+    size_t type, size;
+
+    AST_Operand o1;
+    AST_Operand o2;
+} InstrBinOp;
 
 typedef struct AST_Instruction {
     enum {
@@ -93,12 +100,7 @@ typedef struct AST_Instruction {
     } type;
 
     union {
-        struct {
-            char* op;
-            AST_Operand* lhs;
-            AST_Operand* rhs;
-            char* result;
-        } binary_op;
+        InstrBinOp bin;
 
         struct {
             AST_Operand* ret_val;
