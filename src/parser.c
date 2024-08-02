@@ -198,6 +198,10 @@ AST_Operand parser_parse_op(Parser* parser) {
 
 
 AST_Instruction parser_parse_instruction(Parser* parser) {
+    /*
+    Parses assignment, alloca, binary op and return instructions
+    */
+
     AST_Instruction instr;
 
     if (IS_PBOP(parser->cur->type)) {
@@ -212,7 +216,12 @@ AST_Instruction parser_parse_instruction(Parser* parser) {
         instr.type = INSTR_ALLOCA;
         instr.data.alloca = parser_parse_alloca(parser);
         break;
+    case TOK_RETURN:
+        instr.type = INSTR_RETURN;
+        instr.data.ret = parser_parse_ret(parser);
+        break;
     case TOK_PER:
+        instr.type = INSTR_ASSGN;
         instr.data.assgn = parser_parse_assgn(parser);
         break;
     default:
@@ -329,6 +338,10 @@ InstrBinOp parser_parse_binop(Parser* parser) {
 }
 
 InstrAssign parser_parse_assgn(Parser* parser) {
+    /*
+    Handles assignment instructions %var = (instruction)
+    */
+
     parser_consume(parser);
 
     InstrAssign instr = (InstrAssign){0};
@@ -357,6 +370,26 @@ InstrAssign parser_parse_assgn(Parser* parser) {
     ), iden);
 
 
+    return instr;
+}
+
+InstrReturn parser_parse_ret(Parser* parser) {
+    parser_consume(parser);
+
+    InstrReturn instr;
+
+    if (!IS_TYPEKW(parser->cur->type)) {
+        parser_consume(parser);
+        instr.val.type = OPERAND_VOID;
+        return instr;
+    }
+
+    instr.type = parser->cur->type;
+    
+    parser_consume(parser);
+    
+    instr.val =  parser_parse_op(parser);
+    
     return instr;
 }
 
@@ -479,7 +512,7 @@ void symtbl_insert(Parser* parser, Symbol* symbol, char* raw_symb) {
     while (checks != NULL) {
         if (checks->id == symbol->id) {
             REPORT_ERROR(parser->lexer, "U_REDEF", raw_symb);
-            return; 
+            return;
         }
         checks = checks->next;
     }

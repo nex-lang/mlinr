@@ -103,7 +103,7 @@ typedef struct Token {
         TOK_NSWITCH,        // switch (switch instruction)
         TOK_PHINODE,        // phi (PHI node)
         TOK_POINTER,        // pointer (pointer type)
-        TOK_RETURN,         // return (return instruction)
+        TOK_RETURN,         // ret (return instruction)
         TOK_RESUME,         // resume (resume instruction)
         TOK_STORE,          // store (store instruction)
         TOK_STRUCT,         // struct (structure type)

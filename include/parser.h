@@ -37,6 +37,7 @@ AST_Instruction parser_parse_instruction(Parser* parser);
 InstrAlloca parser_parse_alloca(Parser* parser);
 InstrBinOp parser_parse_binop(Parser* parser);
 InstrAssign parser_parse_assgn(Parser* parser);
+InstrReturn parser_parse_ret(Parser* parser);
 
 PrimInstrDefine parser_parse_define(Parser* parser);
 
