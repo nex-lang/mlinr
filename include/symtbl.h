@@ -14,8 +14,10 @@ typedef enum {
 
 typedef struct Symbol {
     int32_t id;
+    
     SymbolType type;
-    AST_Node* data;
+    unsigned int offset;
+    
     struct Symbol* next;
 } Symbol;
 
@@ -26,7 +28,9 @@ typedef struct SymTable {
 SymTable* symtbl_init();
 void symtbl_free(SymTable* table);
 
-Symbol* symbol_init(int32_t id, SymbolType type, AST_Node* data);
-Symbol* symtbl_lookup(SymTable* table, int32_t id);
+Symbol* symbol_init(char* id, SymbolType type, unsigned int scope, unsigned int offset);
+Symbol* symtbl_lookup(SymTable* table, char* id, uint64_t scope);
+
+int32_t symtbl_hash(const char* key, uint64_t scope);
 
 #endif // SYMTBL_H

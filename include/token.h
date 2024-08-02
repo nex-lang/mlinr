@@ -14,10 +14,8 @@
     (((type) >= TOK_I1 && (type) <= TOK_U64))
 
 #define IS_PBOP(type) \
-    (((type) >= TOK_ADD && (type) <= TOK_LE))
+    (((type) >= TOK_ADD && (type) <= TOK_FCMP))
 
-#define IS_SBOP(type) \
-    (((type) == TOK_ICMP || (type) == TOK_FCMP))
 
 #define IS_LITERAL(type) \
     (((type) >= TOK_L_SSINT && (type) <= TOK_L_SIZE))

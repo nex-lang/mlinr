@@ -1,1 +1,3 @@
-add i32 %a, %b
+define i32 @main(i32 %a) {
+    %temp = add i32 %a, 21 
+}

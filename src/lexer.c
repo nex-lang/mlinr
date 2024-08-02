@@ -194,6 +194,11 @@ void lexer_handle_fillers(Lexer* lexer) {
         case '\t':
             lexer_advance(lexer, 1);
             break;
+        case '\v':
+        case '\n':
+            lexer_advance(lexer, 1);
+            lexer->cl += 1;
+            lexer->cc = 1;
         default:
             break;
     }
@@ -313,12 +318,6 @@ Token* lexer_handle_1char(Lexer* lexer) {
 
 
     switch (lexer->c) {
-        case '\v':
-        case '\n':
-            lexer_advance(lexer, 1); return lexer_token_init(lexer, "\n", TOK_END_INSTR);
-            lexer->cl += 1;
-            lexer->cc = 1;
-            break;
         case '=':
             lexer_advance(lexer, 1); return lexer_token_init(lexer, "=", TOK_SEQ);
             break;

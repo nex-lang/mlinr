@@ -12,6 +12,7 @@ typedef struct AST_Operand AST_Operand;
 typedef struct AST_Block AST_Block;
 typedef struct AST_PrimInstruction AST_PrimInstruction;
 
+
 typedef struct AST_Block {
     AST_Instruction* instructions;
     size_t size;
@@ -23,8 +24,8 @@ typedef struct PrimInstrDefine {
 
     struct args {
         size_t size;
-        char** id;
-        int* type;
+        int32_t* id;
+        uint8_t* type;
     } args;
 
     AST_Block block; // This can now be properly resolved
@@ -70,7 +71,7 @@ typedef struct AST_Operand {
 
     union {
         AST_Literal literal;
-        char* variable;
+        int32_t variable;
     } value;
 } AST_Operand;
 
@@ -90,13 +91,19 @@ typedef struct InstrBinOp {
     AST_Operand o2;
 } InstrBinOp;
 
+typedef struct InstrAssign {
+    char* iden;
+    size_t size;
+    AST_Instruction* instr;
+} InstrAssign;
+
 typedef struct AST_Instruction {
     enum {
         INSTR_BINARY_OP,
-        INSTR_DEFINE,
         INSTR_RETURN,
         INSTR_CALL,
-        INSTR_ALLOCA
+        INSTR_ALLOCA,
+        INSTR_ASSGN
     } type;
 
     union {
@@ -115,6 +122,7 @@ typedef struct AST_Instruction {
         } call;
 
         InstrAlloca alloca;
+        InstrAssign assgn;
     } data;
 } AST_Instruction;
 

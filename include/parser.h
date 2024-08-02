@@ -13,8 +13,10 @@ typedef struct Parser {
     AST_Node* root;
     SymTable* tbl;
 
-    uint8_t nest;
+    uint64_t scope;
 } Parser;
+
+#define ES(parser) ((parser)->scope += 1);
 
 Parser* parser_init(char* filename);
 void parser_free(Parser* parser);
@@ -30,10 +32,16 @@ AST_Node* parser_parse_pinstruction(Parser* parser);
 AST_Literal parser_parse_literal(Parser* parser);
 AST_Operand parser_parse_op(Parser* parser);
 
+
 AST_Instruction parser_parse_instruction(Parser* parser);
 InstrAlloca parser_parse_alloca(Parser* parser);
 InstrBinOp parser_parse_binop(Parser* parser);
+InstrAssign parser_parse_assgn(Parser* parser);
 
 PrimInstrDefine parser_parse_define(Parser* parser);
+
+size_t type_to_size(unsigned int type);
+
+void symtbl_insert(Parser* parser, Symbol* symbol, char* raw_symb);
 
 #endif // PARSER_H
