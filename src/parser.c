@@ -468,8 +468,7 @@ PrimInstrDefine parser_parse_define(Parser* parser) {
         return instr;
     }
 
-
-    parser_parse_instructions(parser);    
+    instr.block = parser_parse_instructions(parser);    
 
     return instr;
 }

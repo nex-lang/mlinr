@@ -9,7 +9,8 @@ set(SOURCES
     src/lexer.c
     src/ast.c
     src/symtbl.c
-    src/parser.c      
+    src/parser.c
+    src/gen.c      
     src/main.c
     src/x86.c
 )
@@ -22,6 +23,7 @@ set(HEADERS
     include/ast.h
     include/symtbl.h
     include/parser.h
+    include/gen.h      
 
     include/x86/register.h
 )

@@ -1,7 +1,11 @@
 #ifndef GEN_H
 #define GEN_H
 
-#include "ast.h"
+#define TARGET_X86 1
+#define TARGET_ARM 2
+#define TARGET_RISCV 3
+
+#include "parser.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,6 +15,7 @@
 typedef struct {
     FILE* fp;
 } Generator;
+
 
 #define WO(fp, indent, format, ...) \
     do { \
@@ -24,6 +29,7 @@ void gen_free(Generator* gen);
 void gen_stmt(AST_Instruction statement, Generator* gen);
 void generate_program(AST_Node* node, Generator* gen);
 
-void generate(AST_Node *root);
+void generate(char* filename, char* arch);
+int get_arch_macro(const char* arch);
 
 #endif // GEN_H

@@ -1,4 +1,4 @@
-#include "parser.h"
+#include "gen.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -11,21 +11,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }    
 
-    if (strcmp(argv[1], "x86") == 0) {
-        #define TARGET_X86
-    } else if (strcmp(argv[1], "arm") == 0) {
-        #define TARGET_ARM
-    } else if (strcmp(argv[1], "riscv") == 0) {
-        #define TARGET_RISCV
-    } else {
-        exit(EXIT_FAILURE);
-    }
-
-
-    Parser* parser = parser_init(argv[2]);
-
-    parser_parse(parser);
-
-
+    generate(argv[2], argv[1]);
+    
     return 0;
 }

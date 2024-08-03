@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 char* io_load_file(char* filename) {
     /*
@@ -38,4 +39,44 @@ char* io_load_file(char* filename) {
     return buffer;
 }
 
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <unistd.h>
+#endif
 
+char* get_basename(char* path) {
+    char *base = strrchr(path, '/');
+#ifdef _WIN32
+    if (!base) base = strrchr(path, '\\');
+#endif
+    return base ? base + 1 : path;
+}
+
+char* get_tempname(char* filename) {
+    char *base_filename = get_basename(filename);
+    
+    char temp_dir[256];
+#ifdef _WIN32
+    GetTempPathA(256, temp_dir);
+#else
+    snprintf(temp_dir, sizeof(temp_dir), ".tmp/");
+    // use tmp/ instead of /tmp/ for dev purposes
+    // you have to mkdir tmp/
+#endif
+
+    char *temp_filename = malloc(512 * sizeof(char));
+    if (temp_filename == NULL) {
+        perror("Unable to allocate memory");
+        exit(EXIT_FAILURE);
+    }
+
+    snprintf(temp_filename, 512, "%s%s", temp_dir, base_filename);
+
+    char *ext = strstr(temp_filename, ".inr");
+    if (ext && strcmp(ext, ".inr") == 0) {
+        strcpy(ext, ".asm");
+    }
+
+    return temp_filename;
+}
