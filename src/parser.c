@@ -234,29 +234,102 @@ AST_Instruction parser_parse_instruction(Parser* parser) {
 
 InstrAlloca parser_parse_alloca(Parser* parser) {
     /*
-    alloca <element type>, <number of elements>
-    alloca <mem> 
+    alloca <type> [, <num elements>] [, align <alignment>]
     */
 
     parser_consume(parser);
 
     InstrAlloca instr;
 
-    if (IS_TYPEKW(parser->cur->type)) {
-        instr.mult.unit = parser->cur->type;
-        
-        if (!parser_expect(parser, TOK_COMMA)) {
-            REPORT_ERROR(parser->lexer, "E_COMMA_AF_TOFMEM");
-            return instr;
-        }
-
-        instr.mult.n = parser_parse_op(parser);
+    if (!IS_TYPEKW(parser->cur->type)) {
+        REPORT_ERROR(parser->lexer, "E_TYPE_ALLOCA");
         return instr;
     }
 
-    instr.sg = parser_parse_op(parser);
+    uint8_t type = parser->cur->type;
+    parser_consume(parser);
+
+    if (!parser_expect(parser, TOK_COMMA)) {
+        instr.type = ALLOCA_VAL;
+        instr.data.var = type;
+        return instr;
+    }
+
+    if (parser_expect(parser, TOK_ALIGN)) {
+        instr.type = ALLOCA_ALVAL;
+        instr.data.alvar.type = type;
+
+        instr.data.alvar.aln = parser_parse_ulit(parser, "align for alloca");
+
+        if (instr.data.alvar.aln == 0) {
+            return instr;
+        }
+    }
+
+    if (!IS_TYPEKW(parser->cur->type)) {
+        REPORT_ERROR(parser->lexer, "E_TorA_ALLOCA");
+        return instr;
+    }
+
+    uint8_t arrtype = parser->cur->type;
+    parser_consume(parser);
+    uint64_t val = parser_parse_ulit(parser, "array for alloca");
+
+    if (val == 0) {
+        return instr;
+    }
+
+    if (!parser_expect(parser, TOK_COMMA)) {
+        instr.type = ALLOCA_ARRAY;
+        instr.data.array.type = type;
+        instr.data.array.arrtype = arrtype;
+        instr.data.array.val = val;
+
+        return instr;
+    }
+
+    if (parser_expect(parser, TOK_ALIGN)) {
+        instr.type = ALLOCA_ALARRAY;
+        instr.data.alarray.type = type;
+        instr.data.alarray.arrtype = arrtype;
+        instr.data.alarray.val = val;
+
+        instr.data.alarray.aln = parser_parse_ulit(parser, "align for array alloca");
+
+        if (instr.data.alarray.aln == 0) {
+            return instr;
+        }
+
+        return instr;
+    }
+
+    REPORT_ERROR(parser->lexer, "UATP_ALLOCA");
     return instr;
 }
+
+
+uint64_t parser_parse_ulit(Parser* parser, char* use) {
+    AST_Operand op = parser_parse_op(parser);
+        
+    if (op.type != OPERAND_LITERAL) {
+        REPORT_ERROR(parser->lexer, "E_VALID", use);
+        return 0;
+    }
+    
+    if (op.value.literal.type != TOK_L_SSUINT && op.value.literal.type != TOK_L_SUINT
+    && op.value.literal.type != TOK_L_UINT && op.value.literal.type != TOK_L_LUINT) {
+        REPORT_ERROR(parser->lexer, "E_UINT", use);
+        return 0;
+    }
+
+    if (op.value.literal.value.uint == 0) {
+        REPORT_ERROR(parser->lexer, "U_ZERO", use);
+        return 0;
+    }
+
+    return op.value.literal.value.uint;
+}
+
 
 InstrBinOp parser_parse_binop(Parser* parser) {
     /*

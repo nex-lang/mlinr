@@ -6,7 +6,7 @@
 
 
 char* keywords[NO_OF_KEYWORDS] = {
-    "add", "alloca", "bitcast", "br", "call", "cast", "cond", "declaration", "define", "double",
+    "align", "add", "alloca", "bitcast", "br", "call", "cast", "cond", "declaration", "define", "double",
     "eq", "fpext", "fptoui", "fptosi", "float", "function", "ge", "gt", "global", "getelementptr", "i1", "i8",
     "i16", "i32", "i64", "f16", "f32", "f64", "u8", "u16", "u32", "u64", "land", "lnand", "lnor", "lnot",
     "lor", "load", "label", "le", "lt", "mul", "ne", "nswitch", "or", "phinode", "pointer",
@@ -238,7 +238,7 @@ Token* lexer_handle_alpha(Lexer* lexer) {
     }
 
     uint8_t KWCHAR_TYPE_MAP[NO_OF_KEYWORDS] = {
-        TOK_ADD, TOK_ALLOCA, TOK_BITCAST, TOK_BR, TOK_CALL, TOK_CAST, TOK_COND, 
+        TOK_ALIGN, TOK_ADD, TOK_ALLOCA, TOK_BITCAST, TOK_BR, TOK_CALL, TOK_CAST, TOK_COND, 
         TOK_DECLARATION, TOK_DEFINE, TOK_DOUBLE, TOK_EQ, TOK_FPEXT, TOK_FPTOUI, 
         TOK_FPTOSI, TOK_FLOAT, TOK_FUNC, TOK_GE, TOK_GT, TOK_GLOBAL,
         TOK_GETELEMENTPTR, TOK_I1, TOK_I8, TOK_I16, TOK_I32, TOK_I64,

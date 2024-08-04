@@ -30,6 +30,5 @@ void gen_stmt(AST_Instruction statement, Generator* gen);
 void generate_program(AST_Node* node, Generator* gen);
 
 void generate(char* filename, char* arch);
-int get_arch_macro(const char* arch);
 
 #endif // GEN_H

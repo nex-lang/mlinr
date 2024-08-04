@@ -2,13 +2,13 @@
 
 #include <string.h>
 
-// #if defined(TARGET_X86)
-//     #include "x86/main.h"
-// #elif defined(TARGET_ARM)
-//     #include "arm/main.h"
-// #elif defined(TARGET_RISCV)
-//     #include "riscv/main.h"
-// #endif
+#if defined(TARGET_X86)
+    #include "x86/x86.h"
+#elif defined(TARGET_ARM)
+    #include "arm/arm.h"
+#elif defined(TARGET_RISCV)
+    #include "riscv/riscv.h"
+#endif
 
 Generator* gen_init(const char* filename) {
     Generator* gen = malloc(sizeof(Generator));
@@ -59,74 +59,28 @@ void gen_free(Generator* gen) {
     free(gen);
 }
 
-void gen_stmt(AST_Instruction statement, Generator* gen) {
-    switch (statement.type) {
-        case INSTR_RETURN:
-            #if defined(TARGET_X86)
-                WO(gen->fp, 1, "mov rax, 0\n");
-            #elif defined(TARGET_ARM)
-                WO(gen->fp, 1, "mov r0, #0\n");
-            #elif defined(TARGET_RISCV)
-                WO(gen->fp, 1, "li a0, 0\n");
-            #endif
-            break;
-        default:
-            break;
-    }
-}
-
 void generate_program(AST_Node* node, Generator* gen) {
     if (!node) return;
 
-    switch (node->data.pinstruction.type) {
-        case PINSTR_DEFINE:
-            #if defined(TARGET_X86)
-                WO(gen->fp, 0, "_start:\n");
-            #elif defined(TARGET_ARM)
-                WO(gen->fp, 0, "_start:\n");
-            #elif defined(TARGET_RISCV)
-                WO(gen->fp, 0, "_start:\n");
-            #endif
-
-            for (size_t i = 0; i < node->data.pinstruction.data.define.block.size; i++) {
-                gen_stmt(node->data.pinstruction.data.define.block.instructions[i], gen);
-            }
-
-            #if defined(TARGET_X86)
-                WO(gen->fp, 1, "mov rax, 60\n");
-                WO(gen->fp, 1, "syscall\n");
-            #elif defined(TARGET_ARM)
-                WO(gen->fp, 1, "mov r7, #1\n");
-                WO(gen->fp, 1, "swi 0\n");
-            #elif defined(TARGET_RISCV)
-                WO(gen->fp, 1, "li a7, 10\n");
-                WO(gen->fp, 1, "ecall\n");
-            #endif
-
-            break;
-
-        default:
-            break;
-    }
-
-    generate_program(node->left, gen);
-    generate_program(node->right, gen);
+    #if defined(TARGET_X86)
+        x86(node, gen);
+    #elif defined(TARGET_ARM)
+        arm(gen->fp, 0, "_start:\n");
+    #elif defined(TARGET_RISCV)
+        riscv(gen->fp, 0, "_start:\n");
+    #endif
 }
 
 void generate(char* filename, char* arch) {
-    int arch_macro = get_arch_macro(arch);
-    if (arch_macro == -1) {
-        fprintf(stderr, "Invalid architecture specified.\n");
+    if (strcmp(arch, "x86") == 0) {
+        #define TARGET_X86
+    } else if (strcmp(arch, "arm") == 0) {
+        #define TARGET_ARM
+    } else if (strcmp(arch, "riscv") == 0) {
+        #define TARGET_RISCV
+    } else {
         exit(EXIT_FAILURE);
     }
-    
-    #if arch_macro == TARGET_X86
-        #define TARGET_X86
-    #elif arch_macro == TARGET_ARM
-        #define TARGET_ARM
-    #elif arch_macro == TARGET_RISCV
-        #define TARGET_RISCV
-    #endif
 
     Parser* parser = parser_init(filename);
 
@@ -139,16 +93,4 @@ void generate(char* filename, char* arch) {
     generate_program(parser->root, gen);
 
     gen_free(gen);
-}
-
-int get_arch_macro(const char* arch) {
-    if (strcmp(arch, "x86") == 0) {
-        return TARGET_X86;
-    } else if (strcmp(arch, "arm") == 0) {
-        return TARGET_ARM;
-    } else if (strcmp(arch, "riscv") == 0) {
-        return TARGET_RISCV;
-    } else {
-        return -1; // Invalid architecture
-    }
 }

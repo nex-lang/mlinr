@@ -1,7 +1,7 @@
 #ifndef TOKEN_H
 #define TOKEN_H
 
-#define NO_OF_KEYWORDS 67
+#define NO_OF_KEYWORDS 68
 #define KEYWORDS keywords
 #define MAX_KEYWORD_LEN 14
 
@@ -65,6 +65,7 @@ typedef struct Token {
         TOK_ICMP,           // icmp (compares passed condition against its int operands)
         TOK_FCMP,           // fcmp (compares passed condition against its float operands)
 
+        TOK_ALIGN,          // allign
         TOK_ALLOCA,         // alloca (memory allocation instruction)
         TOK_BITCAST,        // bitcast (bitwise cast)
         TOK_BR,             // br (branch instruction)

@@ -83,13 +83,37 @@ typedef struct InstrBinOp {
     AST_Operand o2;
 } InstrBinOp;
 
-typedef union InstrAlloca {
-    struct {
-        AST_Operand n;
-        size_t unit;
-    } mult;
+typedef struct InstrAlloca {
+    enum {
+        ALLOCA_VAL,
+        ALLOCA_ALVAL,
+        ALLOCA_ARRAY,
+        ALLOCA_ALARRAY,
+    } type;
+    
+    union {
+        uint8_t var;
+        struct {
+            uint64_t aln;
+            uint8_t type;
+        } alvar;
 
-    AST_Operand sg;
+        struct {
+            uint8_t type;
+        
+            uint8_t arrtype;
+            uint64_t val;
+        } array;
+
+        struct {            
+            uint8_t type;
+        
+            uint8_t arrtype;
+            uint64_t val;
+                    
+            uint64_t aln;
+        } alarray;
+    } data;
 } InstrAlloca;
 
 typedef struct InstrReturn {
