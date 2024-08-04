@@ -2,14 +2,6 @@
 
 #include <string.h>
 
-#if defined(TARGET_X86)
-    #include "x86/x86.h"
-#elif defined(TARGET_ARM)
-    #include "arm/arm.h"
-#elif defined(TARGET_RISCV)
-    #include "riscv/riscv.h"
-#endif
-
 Generator* gen_init(const char* filename) {
     Generator* gen = malloc(sizeof(Generator));
     if (!gen) {
@@ -41,6 +33,7 @@ Generator* gen_init(const char* filename) {
     }
 
     #if defined(TARGET_X86)
+        gen->stack.x86 = x86_stack();
         WO(gen->fp, 0, "section .text\n");
         WO(gen->fp, 0, "global _start\n\n");
     #elif defined(TARGET_ARM)
@@ -63,7 +56,7 @@ void generate_program(AST_Node* node, Generator* gen) {
     if (!node) return;
 
     #if defined(TARGET_X86)
-        x86(node, gen);
+        x86(node, gen->fp, gen->stack.x86);
     #elif defined(TARGET_ARM)
         arm(gen->fp, 0, "_start:\n");
     #elif defined(TARGET_RISCV)
@@ -88,9 +81,15 @@ void generate(char* filename, char* arch) {
 
     filename = get_tempname(filename);
 
-
     Generator* gen = gen_init(filename);
-    generate_program(parser->root, gen);
+    
+    #if defined(TARGET_X86)
+        x86(parser->root, gen->fp, gen->stack.x86);
+    #elif defined(TARGET_ARM)
+        arm(gen->fp, 0, "_start:\n");
+    #elif defined(TARGET_RISCV)
+        riscv(gen->fp, 0, "_start:\n");
+    #endif
 
     gen_free(gen);
 }

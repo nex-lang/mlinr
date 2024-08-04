@@ -42,6 +42,7 @@ InstrReturn parser_parse_ret(Parser* parser);
 PrimInstrDefine parser_parse_define(Parser* parser);
 
 size_t type_to_size(unsigned int type);
+uint64_t parser_parse_ulit(Parser* parser, char* use);
 
 void symtbl_insert(Parser* parser, Symbol* symbol, char* raw_symb);
 

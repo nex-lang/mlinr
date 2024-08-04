@@ -1,12 +1,12 @@
 #ifndef X86_X86_H
 #define X86_X86_H
 
-#include "ast.h"
-#include "gen.h"
-
+#include "x86/register.h"
 #include "x86/stack.h"
 #include "x86/instr.h"
 
-void x86(AST_Node* node, Generator* gen);
+#include <stdio.h>
+
+void x86(AST_Node* node, FILE* fp, X86Stack* stack);
 
 #endif // X86_X86_H

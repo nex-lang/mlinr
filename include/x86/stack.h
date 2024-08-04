@@ -11,12 +11,14 @@ typedef struct X86StackVar {
     size_t size;
 } X86StackVar;
 
-typedef struct Stack {
+typedef struct X86Stack {
     uint64_t off;
 
     size_t size;
     X86StackVar** vars;
 } X86Stack;
+
+X86Stack* x86_stack();
 
 void x86_push(X86Stack* stack, size_t offset, uint32_t id, uint64_t size);
 void x86_pop(X86Stack* stack);

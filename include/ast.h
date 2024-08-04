@@ -33,7 +33,8 @@ typedef struct PrimInstrDefine {
 
 typedef struct AST_PrimInstruction {
     enum {
-        PINSTR_DEFINE,
+        PINSTR_ROOT,
+        PINSTR_DEFINE
     } type;
 
     union {

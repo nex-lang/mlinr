@@ -57,11 +57,12 @@ void parser_consume(Parser* parser) {
 void parser_parse(Parser* parser) {
     while (parser->cur->type != TOK_EOF) {
         switch (parser->cur->type) {
-        case TOK_DEFINE:
-            parser->tree->right = parser_parse_pinstruction(parser);
-            break;        
-        default:
-            break;
+            case TOK_DEFINE:
+            
+                parser->tree->right = parser_parse_pinstruction(parser);
+                break;        
+            default:
+                break;
         }
 
         if (!(parser->tree && parser->tree->right)) {
@@ -72,6 +73,8 @@ void parser_parse(Parser* parser) {
 
         parser->tree = tmp;
     }   
+
+    return;
 }
 
 

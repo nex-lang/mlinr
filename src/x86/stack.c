@@ -4,6 +4,16 @@
 #include <stdio.h>
 #include "x86/stack.h"
 
+X86Stack* x86_stack() {
+    X86Stack* stack = malloc(sizeof(X86Stack));
+
+    stack->off = 0;
+    stack->size = 0;
+    stack->vars = malloc(sizeof(X86StackVar));
+
+    return stack;
+}
+
 void x86_push(X86Stack* stack, size_t offset, uint32_t id, uint64_t size) {
     X86StackVar* var = malloc(sizeof(X86StackVar));
     if (var == NULL) {
