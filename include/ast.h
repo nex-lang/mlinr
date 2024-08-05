@@ -115,6 +115,9 @@ typedef struct InstrAlloca {
             uint64_t aln;
         } alarray;
     } data;
+
+    uint64_t off;
+    uint64_t size;
 } InstrAlloca;
 
 typedef struct InstrReturn {
@@ -123,7 +126,7 @@ typedef struct InstrReturn {
 } InstrReturn;
 
 typedef struct InstrAssign {
-    char* iden;
+    int32_t iden;
     size_t size;
     AST_Instruction* instr;
 } InstrAssign;

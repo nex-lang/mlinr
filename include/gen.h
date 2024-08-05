@@ -1,9 +1,9 @@
 #ifndef GEN_H
 #define GEN_H
 
-#define TARGET_X86 1
-#define TARGET_ARM 2
-#define TARGET_RISCV 3
+#define TARGET_X86 0
+#define TARGET_ARM 0
+#define TARGET_RISCV 0
 
 #include "parser.h"
 

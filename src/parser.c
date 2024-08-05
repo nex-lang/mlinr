@@ -422,7 +422,6 @@ InstrAssign parser_parse_assgn(Parser* parser) {
 
     InstrAssign instr = (InstrAssign){0};
     
-    
     if (parser->cur->type != TOK_IDEN) {
         return instr;
     }
@@ -441,10 +440,10 @@ InstrAssign parser_parse_assgn(Parser* parser) {
         instr.size = type_to_size(instr.instr->data.bin.type);
     }
 
-    symtbl_insert(parser, symbol_init(
-        iden, SYMBOL_VARIABLE, parser->scope, instr.size 
-    ), iden);
+    Symbol* sym = symbol_init(iden, SYMBOL_VARIABLE, parser->scope, instr.size);
+    symtbl_insert(parser, sym, iden);
 
+    instr.iden = sym->id;
 
     return instr;
 }
@@ -552,25 +551,21 @@ PrimInstrDefine parser_parse_define(Parser* parser) {
 size_t type_to_size(unsigned int type) {
     switch (type) {
         case TOK_I1:
-            return 1;
         case TOK_I8:
         case TOK_U8:
-            return 8;
+            return 1;
         case TOK_I16:
         case TOK_U16:
-            return 16;
+        case TOK_F16:
+            return 2;
         case TOK_I32:
         case TOK_U32:
-            return 32;
+        case TOK_F32:
+            return 4;
         case TOK_I64:
         case TOK_U64:
-            return 64;
-        case TOK_F16:
-            return 16;
-        case TOK_F32:
-            return 32;
         case TOK_F64:
-            return 64;
+            return 8;
         default:
             return 0;
     }

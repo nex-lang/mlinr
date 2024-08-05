@@ -14,7 +14,7 @@ X86Stack* x86_stack() {
     return stack;
 }
 
-void x86_push(X86Stack* stack, size_t offset, uint32_t id, uint64_t size) {
+void x86_push(X86Stack* stack, size_t offset, int32_t id, uint64_t size) {
     X86StackVar* var = malloc(sizeof(X86StackVar));
     if (var == NULL) {
         fprintf(stderr, "Error: Memory allocation failed for stack variable\n");
@@ -71,4 +71,14 @@ void x86_spop(X86Stack* stack) {
         stack->size = 0;
         stack->off = 0;
     }
+}
+
+size_t x86_lookup_size(X86Stack* stack, int32_t id) {
+    for (size_t i = 0; i < stack->size; i++) {
+        if (stack->vars[i]->id == id) {
+            return stack->vars[i]->size;
+        }
+    }
+
+    return -1;
 }

@@ -1,0 +1,5 @@
+define i32 @main(i32 %a) {
+    %x = alloca i32, i32 25 
+    add i32 20, 81
+    ret i32 0 
+}

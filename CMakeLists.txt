@@ -29,6 +29,7 @@ set(X86_SOURCES
     src/x86/x86.c
     src/x86/stack.c
     src/x86/instr.c
+    src/x86/arthlogic.c
 )
 
 set(X86_HEADERS
@@ -36,6 +37,7 @@ set(X86_HEADERS
     include/x86/register.h
     include/x86/stack.h
     include/x86/instr.h
+    include/x86/arthlogic.h
 )
 
 set(ARM_SOURCES

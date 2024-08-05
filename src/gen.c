@@ -66,11 +66,11 @@ void generate_program(AST_Node* node, Generator* gen) {
 
 void generate(char* filename, char* arch) {
     if (strcmp(arch, "x86") == 0) {
-        #define TARGET_X86
+        #define TARGET_X86 1
     } else if (strcmp(arch, "arm") == 0) {
-        #define TARGET_ARM
+        #define TARGET_ARM 1
     } else if (strcmp(arch, "riscv") == 0) {
-        #define TARGET_RISCV
+        #define TARGET_RISCV 1
     } else {
         exit(EXIT_FAILURE);
     }

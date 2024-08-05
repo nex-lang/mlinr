@@ -13,23 +13,51 @@ void x86(AST_Node* node, FILE* fp, X86Stack* stack) {
  
             for (size_t i = 0; i < node->data.pinstruction.data.define.block.size; i++) {
                 if (node->data.pinstruction.data.define.block.instructions[i].type == INSTR_ALLOCA) {
+                    uint64_t sz = 0;
                     switch (node->data.pinstruction.data.define.block.instructions[i].data.alloca.type) {
                         case ALLOCA_VAL:
-                            stack->size += type_to_size(node->data.pinstruction.data.define.block.instructions[i].data.alloca.data.var);
+                            sz = type_to_size(node->data.pinstruction.data.define.block.instructions[i].data.alloca.data.var);
                             break;
                         case ALLOCA_ALVAL:
-                            stack->size += type_to_size(node->data.pinstruction.data.define.block.instructions[i].data.alloca.data.alvar.type);
+                            sz = type_to_size(node->data.pinstruction.data.define.block.instructions[i].data.alloca.data.alvar.type);
                             break;
                         case ALLOCA_ARRAY:
-                            stack->size += node->data.pinstruction.data.define.block.instructions[i].data.alloca.data.array.val * type_to_size(node->data.pinstruction.data.define.block.instructions[i].data.alloca.data.array.type);
+                            sz = node->data.pinstruction.data.define.block.instructions[i].data.alloca.data.array.val * type_to_size(node->data.pinstruction.data.define.block.instructions[i].data.alloca.data.array.type);
                             break;
                         case ALLOCA_ALARRAY:
-                            stack->size += node->data.pinstruction.data.define.block.instructions[i].data.alloca.data.alarray.val * type_to_size(node->data.pinstruction.data.define.block.instructions[i].data.alloca.data.alarray.type);
+                            sz = node->data.pinstruction.data.define.block.instructions[i].data.alloca.data.alarray.val * type_to_size(node->data.pinstruction.data.define.block.instructions[i].data.alloca.data.alarray.type);
                             break;
                         default:
                             break;
                     }
+                    stack->size += sz;
+                    node->data.pinstruction.data.define.block.instructions[i].data.alloca.off = stack->size - sz;
+                    node->data.pinstruction.data.define.block.instructions[i].data.alloca.size = sz;
                 }
+
+                if (node->data.pinstruction.data.define.block.instructions[i].type == INSTR_ASSGN) {
+                    uint64_t sz2 = 0;
+                    switch (node->data.pinstruction.data.define.block.instructions[i].data.assgn.instr->data.alloca.type) {
+                        case ALLOCA_VAL:
+                            sz2 = type_to_size(node->data.pinstruction.data.define.block.instructions[i].data.assgn.instr->data.alloca.data.var);
+                            break;
+                        case ALLOCA_ALVAL:
+                            sz2 = type_to_size(node->data.pinstruction.data.define.block.instructions[i].data.assgn.instr->data.alloca.data.alvar.type);
+                            break;
+                        case ALLOCA_ARRAY:
+                            sz2 = node->data.pinstruction.data.define.block.instructions[i].data.assgn.instr->data.alloca.data.array.val * type_to_size(node->data.pinstruction.data.define.block.instructions[i].data.assgn.instr->data.alloca.data.array.type);
+                            break;
+                        case ALLOCA_ALARRAY:
+                            sz2 = node->data.pinstruction.data.define.block.instructions[i].data.assgn.instr->data.alloca.data.alarray.val * type_to_size(node->data.pinstruction.data.define.block.instructions[i].data.assgn.instr->data.alloca.data.alarray.type);
+                            break;
+                        default:
+                            break;
+                    }
+                    stack->size += sz2;
+                    node->data.pinstruction.data.define.block.instructions[i].data.alloca.off = stack->size - sz2;
+                    node->data.pinstruction.data.define.block.instructions[i].data.alloca.size = sz2;
+                }
+                
             }
 
             WO(fp, 1, "mov rbp, rsp\n");
@@ -37,11 +65,8 @@ void x86(AST_Node* node, FILE* fp, X86Stack* stack) {
             WO(fp, 1, "sub rsp, %lu\n\n", stack->size);           
 
             for (size_t i = 0; i < node->data.pinstruction.data.define.block.size; i++) {
-                X86_instr(node->data.pinstruction.data.define.block.instructions[i], stack);
+                X86_instr(node->data.pinstruction.data.define.block.instructions[i], fp, stack);
             }
-
-            WO(fp, 1, "mov rax, 60\n");
-            WO(fp, 1, "syscall\n");
 
             break;
         default:
