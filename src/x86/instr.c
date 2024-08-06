@@ -38,7 +38,20 @@ void X86_alloca(AST_Instruction statement, FILE* fp, X86Stack* stack) {
 }
 
 void X86_assgn(AST_Instruction statement, FILE* fp, X86Stack* stack) {
-    x86_push(stack, statement.data.assgn.instr->data.alloca.off, statement.data.assgn.iden, statement.data.assgn.instr->data.alloca.size);
+    if (statement.data.assgn.instr->type == INSTR_ALLOCA) {
+        x86_push(stack, statement.data.assgn.instr->data.alloca.off, statement.data.assgn.iden, statement.data.assgn.instr->data.alloca.size);
+    } else if (statement.data.assgn.instr->type == INSTR_BINARY_OP) {
+        x86_push(stack, statement.data.assgn.instr->data.bin.size, statement.data.assgn.iden, statement.data.assgn.instr->data.bin.size);
+
+        x86_binop(*statement.data.assgn.instr, fp, stack);
+        uint64_t n = x86_lookup_offset(stack, statement.data.assgn.iden);
+        if (n > 0) {
+            WO(fp, 1, "mov [rsp + %ld], rax\n", n);
+            return;
+        }
+
+        WO(fp, 1, "mov rax, [rsp]\n");
+    }
 }
 
 void x86_binop(AST_Instruction statement, FILE* fp, X86Stack* stack) {

@@ -175,6 +175,7 @@ AST_Operand parser_parse_op(Parser* parser) {
         return op;
     }
 
+
     if (!parser_expect(parser, TOK_PER)) {
         return op;
     }
@@ -339,6 +340,7 @@ InstrBinOp parser_parse_binop(Parser* parser) {
     <pre_op> op <result type> <o1>, <o2>
     */
 
+
     InstrBinOp instr = (InstrBinOp){0};
     uint8_t cmp_prefix = 0;
 
@@ -393,9 +395,8 @@ InstrBinOp parser_parse_binop(Parser* parser) {
         return instr;
     }
 
-    instr.size = parser->cur->type;
+    instr.size = type_to_size(parser->cur->type);
     parser_consume(parser);
-
 
     instr.o1 = parser_parse_op(parser);
 

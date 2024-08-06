@@ -56,13 +56,20 @@ void x86(AST_Node* node, FILE* fp, X86Stack* stack) {
                     stack->size += sz2;
                     node->data.pinstruction.data.define.block.instructions[i].data.alloca.off = stack->size - sz2;
                     node->data.pinstruction.data.define.block.instructions[i].data.alloca.size = sz2;
+                
+                    if (node->data.pinstruction.data.define.block.instructions[i].data.assgn.instr->type == INSTR_BINARY_OP) {
+                        stack->size += node->data.pinstruction.data.define.block.instructions[i].data.assgn.instr->data.bin.size; 
+                    }
+
                 }
+
                 
             }
 
             WO(fp, 1, "mov rbp, rsp\n");
             WO(fp, 1, "and rbp, -16\n");   
-            WO(fp, 1, "sub rsp, %lu\n\n", stack->size);           
+            WO(fp, 1, "sub rsp, %lu\n\n", stack->size); 
+            stack->off = stack->size;          
 
             for (size_t i = 0; i < node->data.pinstruction.data.define.block.size; i++) {
                 X86_instr(node->data.pinstruction.data.define.block.instructions[i], fp, stack);

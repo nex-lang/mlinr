@@ -360,6 +360,9 @@ Token* lexer_handle_1char(Lexer* lexer) {
         case ']':
             lexer_advance(lexer, 1); return lexer_token_init(lexer, "]", TOK_RBRACK);
             break;
+        case '-':
+            return lexer_handle_numeric(lexer, true);
+            break;
         case '\'':
             return lexer_process_single_quote(lexer);
             break;
@@ -477,7 +480,7 @@ uint8_t lexer_process_int_type(char* buf) {
         int128_t int128_max = { .high = 0x7FFFFFFFFFFFFFFF, .low = 0xFFFFFFFFFFFFFFFF };
         int128_t int128_min = { .high = 0x8000000000000000, .low = 0 };
 
-        signed_val = strtoll(buf, &endptr, 10) - 1;
+        signed_val = -strtoll(buf, &endptr, 10);
 
         if (endptr == buf || *endptr != '\0') {
             return TOK_ERROR;
