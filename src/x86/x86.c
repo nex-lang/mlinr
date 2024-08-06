@@ -14,7 +14,7 @@ void x86(AST_Node* node, FILE* fp, X86Stack* stack) {
         case PINSTR_DEFINE:
             WO(fp, 0, "%s:\n", node->data.pinstruction.data.define.id);
 
-            if (strcmp(node->data.pinstruction.data.define.id, node->data.pinstruction.data.define.id) == 0) {
+            if (strcmp(node->data.pinstruction.data.define.id, "_start") == 0) {
                 mep = true; // bootleg implementation of MEP
             }
  

@@ -9,7 +9,7 @@ void X86_instr(AST_Instruction statement, FILE* fp, X86Stack* stack, bool mep) {
         case INSTR_RETURN:
             if (mep) {
                 WO(fp, 1, "\n\tmov rax, 60\n");
-                WO(fp, 1, "mov syscall\n");
+                WO(fp, 1, "syscall\n");
                 break;
             }
             X86_return(statement, fp, stack);
