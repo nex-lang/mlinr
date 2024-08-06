@@ -68,7 +68,8 @@ typedef struct AST_Operand {
     enum {
         OPERAND_LITERAL,
         OPERAND_VARIABLE,
-        OPERAND_VOID
+        OPERAND_VOID,
+        OPERAND_ERR
     } type;
 
     union {
@@ -131,13 +132,34 @@ typedef struct InstrAssign {
     AST_Instruction* instr;
 } InstrAssign;
 
+typedef struct InstrStore {
+    size_t type;
+    AST_Operand push_op;
+
+    size_t ptr_type;
+    int32_t ptr_op;
+
+    uint64_t aln;
+} InstrStore;
+
+typedef struct InstrLoad {
+    size_t type;
+
+    size_t ptr_type;
+    int32_t ptr_op;
+
+    uint64_t aln;
+} InstrLoad;
+
 typedef struct AST_Instruction {
     enum {
         INSTR_BINARY_OP,
         INSTR_RETURN,
         INSTR_CALL,
         INSTR_ALLOCA,
-        INSTR_ASSGN
+        INSTR_ASSGN,
+        INSTR_STORE,
+        INSTR_LOAD
     } type;
 
     union {
@@ -154,6 +176,8 @@ typedef struct AST_Instruction {
 
         InstrAlloca alloca;
         InstrAssign assgn;
+        InstrStore store;
+        InstrLoad load;
     } data;
 } AST_Instruction;
 

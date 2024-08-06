@@ -32,12 +32,13 @@ AST_Node* parser_parse_pinstruction(Parser* parser);
 AST_Literal parser_parse_literal(Parser* parser);
 AST_Operand parser_parse_op(Parser* parser);
 
-
 AST_Instruction parser_parse_instruction(Parser* parser);
 InstrAlloca parser_parse_alloca(Parser* parser);
 InstrBinOp parser_parse_binop(Parser* parser);
 InstrAssign parser_parse_assgn(Parser* parser);
 InstrReturn parser_parse_ret(Parser* parser);
+InstrStore parser_parse_store(Parser* parser);
+InstrLoad parser_parse_load(Parser* parser);
 
 PrimInstrDefine parser_parse_define(Parser* parser);
 

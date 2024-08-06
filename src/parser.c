@@ -177,10 +177,12 @@ AST_Operand parser_parse_op(Parser* parser) {
 
 
     if (!parser_expect(parser, TOK_PER)) {
+        op.type = OPERAND_ERR;
         return op;
     }
 
     if (parser->cur->type != TOK_IDEN) {
+        op.type = OPERAND_ERR;
         return op; 
     }
 
@@ -189,6 +191,7 @@ AST_Operand parser_parse_op(Parser* parser) {
     
     Symbol* symb = symtbl_lookup(parser->tbl, parser->cur->value, parser->scope);
     if (symb == NULL) {
+        op.type = OPERAND_ERR;
         REPORT_ERROR(parser->lexer, "U_USOUDV");
         return op;
     }
@@ -228,6 +231,14 @@ AST_Instruction parser_parse_instruction(Parser* parser) {
         instr.type = INSTR_ASSGN;
         instr.data.assgn = parser_parse_assgn(parser);
         break;
+    case TOK_STORE:
+        instr.type = INSTR_STORE;
+        instr.data.store = parser_parse_store(parser);
+        break;
+    case TOK_LOAD:
+        instr.type = INSTR_LOAD;
+        instr.data.load = parser_parse_load(parser);
+        break;
     default:
         break;
     }
@@ -243,7 +254,7 @@ InstrAlloca parser_parse_alloca(Parser* parser) {
 
     parser_consume(parser);
 
-    InstrAlloca instr;
+    InstrAlloca instr = (InstrAlloca){0};
 
     if (!IS_TYPEKW(parser->cur->type)) {
         REPORT_ERROR(parser->lexer, "E_TYPE_ALLOCA");
@@ -422,6 +433,7 @@ InstrAssign parser_parse_assgn(Parser* parser) {
     parser_consume(parser);
 
     InstrAssign instr = (InstrAssign){0};
+    Symbol* sym = NULL;
     
     if (parser->cur->type != TOK_IDEN) {
         return instr;
@@ -441,8 +453,21 @@ InstrAssign parser_parse_assgn(Parser* parser) {
         instr.size = type_to_size(instr.instr->data.bin.type);
     }
 
-    Symbol* sym = symbol_init(iden, SYMBOL_VARIABLE, parser->scope, instr.size);
-    symtbl_insert(parser, sym, iden);
+    if (instr.instr->type == INSTR_ALLOCA) {
+        sym = symbol_init(iden, SYMBOL_VARIABLE, parser->scope, instr.size);
+        symtbl_insert(parser, sym, iden);
+
+        instr.iden = sym->id;
+
+        return instr;
+    }
+
+    sym = symtbl_lookup(parser->tbl, iden, parser->scope);
+    
+    if (sym == NULL) {
+        REPORT_ERROR(parser->lexer, "U_UDEFVA");
+        return instr;
+    }
 
     instr.iden = sym->id;
 
@@ -452,7 +477,7 @@ InstrAssign parser_parse_assgn(Parser* parser) {
 InstrReturn parser_parse_ret(Parser* parser) {
     parser_consume(parser);
 
-    InstrReturn instr;
+    InstrReturn instr = (InstrReturn){0};
 
     if (!IS_TYPEKW(parser->cur->type)) {
         parser_consume(parser);
@@ -469,6 +494,121 @@ InstrReturn parser_parse_ret(Parser* parser) {
     return instr;
 }
 
+InstrStore parser_parse_store(Parser* parser) {
+    parser_consume(parser);
+
+    InstrStore instr = (InstrStore){0};
+
+    if (!IS_TYPEKW(parser->cur->type)) {
+        REPORT_ERROR(parser->lexer, "E_TKW");
+        return instr;
+    }
+
+    instr.type = parser->cur->type;
+    parser_consume(parser);
+
+    instr.push_op = parser_parse_op(parser);
+    if (instr.push_op.type == OPERAND_ERR || instr.push_op.type == OPERAND_VOID) {
+        REPORT_ERROR(parser->lexer, "I_PUSHOP");
+        return instr;
+    }
+
+    if (!parser_expect(parser, TOK_COMMA)) {
+        REPORT_ERROR(parser->lexer, "E_COMMA");
+        return instr;
+    }
+
+    if (!IS_TYPEKW(parser->cur->type)) {
+        REPORT_ERROR(parser->lexer, "E_TKW");
+        return instr;
+    }
+
+    instr.ptr_type = parser->cur->type;
+    parser_consume(parser);
+
+
+    AST_Operand op = parser_parse_op(parser);
+    if (op.type != OPERAND_VARIABLE) {
+        REPORT_ERROR(parser->lexer, "I_PTROP");
+        return instr;
+    }
+
+    instr.ptr_op = op.value.variable;
+
+    if (!parser_expect(parser, TOK_COMMA)) {
+        return instr;
+    }
+    
+
+    if (!parser_expect(parser, TOK_ALIGN)) {
+        REPORT_ERROR(parser->lexer, "E_ALIGN");
+        return instr;
+    }
+
+    instr.aln = parser_parse_ulit(parser, "store");
+    
+    if (instr.aln == 0) {
+        REPORT_ERROR(parser->lexer, "E_PROP_ALIGN");
+        return instr;
+    }
+
+    return instr;
+}
+
+InstrLoad parser_parse_load(Parser* parser) {
+    parser_consume(parser);
+
+    InstrLoad instr = (InstrLoad){0};
+
+    if (!IS_TYPEKW(parser->cur->type)) {
+        REPORT_ERROR(parser->lexer, "E_TKW");
+        return instr;
+    }
+
+    instr.type = type_to_size(parser->cur->type);
+    parser_consume(parser);
+
+    if (!parser_expect(parser, TOK_COMMA)) {
+        REPORT_ERROR(parser->lexer, "E_COMMA");
+        return instr;
+    }
+
+    if (!IS_TYPEKW(parser->cur->type)) {
+        REPORT_ERROR(parser->lexer, "E_TKW");
+        return instr;
+    }
+
+    instr.ptr_type = type_to_size(parser->cur->type);
+    parser_consume(parser);
+
+
+    AST_Operand op = parser_parse_op(parser);
+    if (op.type != OPERAND_VARIABLE) {
+        REPORT_ERROR(parser->lexer, "I_PTROP");
+        return instr;
+    }
+
+    instr.ptr_op = op.value.variable;
+
+    if (!parser_expect(parser, TOK_COMMA)) {
+        return instr;
+    }
+    
+
+    if (!parser_expect(parser, TOK_ALIGN)) {
+        REPORT_ERROR(parser->lexer, "E_ALIGN");
+        return instr;
+    }
+
+    instr.aln = parser_parse_ulit(parser, "load");
+    
+    if (instr.aln == 0) {
+        REPORT_ERROR(parser->lexer, "E_PROP_ALIGN");
+        return instr;
+    }
+
+    return instr;
+}
 
 PrimInstrDefine parser_parse_define(Parser* parser) {
     parser_consume(parser);

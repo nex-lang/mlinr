@@ -2,14 +2,21 @@
 
 #include "gen.h"
 
+#include <string.h>
+
 void x86(AST_Node* node, FILE* fp, X86Stack* stack) {
     if (node == NULL) {
         return;
     }
+    bool mep = false;
 
     switch (node->data.pinstruction.type) {
         case PINSTR_DEFINE:
             WO(fp, 0, "%s:\n", node->data.pinstruction.data.define.id);
+
+            if (strcmp(node->data.pinstruction.data.define.id, node->data.pinstruction.data.define.id) == 0) {
+                mep = true; // bootleg implementation of MEP
+            }
  
             for (size_t i = 0; i < node->data.pinstruction.data.define.block.size; i++) {
                 if (node->data.pinstruction.data.define.block.instructions[i].type == INSTR_ALLOCA) {
@@ -72,7 +79,7 @@ void x86(AST_Node* node, FILE* fp, X86Stack* stack) {
             stack->off = stack->size;          
 
             for (size_t i = 0; i < node->data.pinstruction.data.define.block.size; i++) {
-                X86_instr(node->data.pinstruction.data.define.block.instructions[i], fp, stack);
+                X86_instr(node->data.pinstruction.data.define.block.instructions[i], fp, stack, mep);
             }
 
             break;
