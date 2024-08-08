@@ -36,6 +36,7 @@ set(X86_HEADERS
     include/x86/x86.h
     include/x86/register.h
     include/x86/stack.h
+    include/x86/mem.h
     include/x86/instr.h
     include/x86/arthlogic.h
 )
