@@ -80,11 +80,22 @@ void generate(char* filename, char* arch) {
     parser_parse(parser);
 
     filename = get_tempname(filename);
-
     Generator* gen = gen_init(filename);
+
+    size_t len = strlen(filename);
+    if (len < 4 || strcmp(filename + len - 4, ".asm") != 0) {
+        fprintf(stderr, "Filename does not end with .asm\n");
+        exit(EXIT_FAILURE);
+    }
+
+    char base[len - 3];
+    strncpy(base, filename, len - 4);
+    base[len - 4] = '\0'; 
     
     #if defined(TARGET_X86)
         x86(parser->root, gen->fp, gen->stack.x86);
+        EXEC("nasm -f elf64 %s.asm -o %s.o", base, base);
+        EXEC("ld -e _start %s.o -o %s", base, base);
     #elif defined(TARGET_ARM)
         arm(gen->fp, 0, "_start:\n");
     #elif defined(TARGET_RISCV)

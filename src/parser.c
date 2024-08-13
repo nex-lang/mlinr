@@ -489,7 +489,7 @@ InstrReturn parser_parse_ret(Parser* parser) {
     
     parser_consume(parser);
     
-    instr.val =  parser_parse_op(parser);
+    instr.val =  parser_parse_literal(parser);
     
     return instr;
 }

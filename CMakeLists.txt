@@ -30,6 +30,7 @@ set(X86_SOURCES
     src/x86/stack.c
     src/x86/instr.c
     src/x86/arthlogic.c
+    src/x86/mem.c
 )
 
 set(X86_HEADERS

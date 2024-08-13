@@ -5,21 +5,18 @@
 
 #include "token.h"
 #include "io.h"
+#include "parser.h"
 
 void X86_instr(AST_Instruction statement, FILE* fp, X86Stack* stack, bool mep) {
     switch (statement.type) {
         case INSTR_RETURN:
-            if (mep) {
-                WO(fp, 1, "\n\tmov rax, 60\n");
-                WO(fp, 1, "syscall\n");
-                break;
-            }
-            X86_return(statement, fp, stack);
+            X86_return(statement, fp, stack, mep);
             break;
         case INSTR_ASSGN:
             X86_assgn(statement, fp, stack);
             break;
         case INSTR_ALLOCA:
+            X86_alloca(&statement, fp, stack);
             break;
         case INSTR_STORE:
             x86_store(statement, fp, stack);
@@ -33,21 +30,28 @@ void X86_instr(AST_Instruction statement, FILE* fp, X86Stack* stack, bool mep) {
     
 }
 
-void X86_return(AST_Instruction statement, FILE* fp, X86Stack* stack) {
+void X86_return(AST_Instruction statement, FILE* fp, X86Stack* stack, bool mep) {
     // ! KW MOVING / HANDLED IN MEM.C
+    if (mep) {
+        WO(fp, 1, "\n\tmov rax, 60\n");
+        // WO(fp, 1, "mov rdi, %s\n", statement.data.ret.val.value.literal.value.);
+        WO(fp, 1, "syscall\n");
+        return;
+    }
     WO(fp, 1, "\n\tadd rsp, %lu\n", stack->size);  
     WO(fp, 1, "ret\n");
 }
 
-void X86_alloca(AST_Instruction statement, FILE* fp, X86Stack* stack) {
-    if (statement.data.alloca.type == ALLOCA_VAL) {
-        
-    
+void X86_alloca(AST_Instruction* statement, FILE* fp, X86Stack* stack) {
+    if (statement->data.alloca.type == ALLOCA_VAL) {
+        statement->data.alloca.size = type_to_size(statement->data.alloca.data.var);
     }
 }
 
 void X86_assgn(AST_Instruction statement, FILE* fp, X86Stack* stack) {
     if (statement.data.assgn.instr->type == INSTR_ALLOCA) {
+        X86_alloca(statement.data.assgn.instr, fp, stack);
+        printf("===> %ld\n", statement.data.assgn.instr->data.alloca.size);
         x86_push(stack, statement.data.assgn.instr->data.alloca.off, statement.data.assgn.iden, statement.data.assgn.instr->data.alloca.size);
     } else if (statement.data.assgn.instr->type == INSTR_BINARY_OP) {
         char* reg = (char*)malloc(16);
@@ -200,12 +204,9 @@ void x86_store(AST_Instruction statement, FILE* fp, X86Stack* stack) {
     char* reg1 = (char*)malloc(16);
     char* movasm = get_movasm(stack, &instr.push_op); 
     char* refasm = get_refasm(stack, &instr.push_op, &reg1, RAX);
-    char* ptr_refasm = get_refasmid(stack, instr.ptr_op);
+    char* ptr_refasm = get_refasmid(stack, instr.ptr_op, false);
 
     if (movasm == NULL || refasm == NULL || ptr_refasm == NULL) {
-        free(movasm);
-        free(refasm);
-        free(ptr_refasm);
         return;
     }
 
@@ -218,7 +219,7 @@ void x86_load(AST_Instruction statement, FILE* fp, X86Stack* stack) {
     InstrLoad instr = statement.data.load;
 
     char* movasm = get_movasmid(stack, instr.ptr_op); 
-    char* refasm = get_refasmid(stack, instr.ptr_op);
+    char* refasm = get_refasmid(stack, instr.ptr_op, true);
 
     WO(fp, 1, "%s rax, %s\n", movasm, refasm);
 }

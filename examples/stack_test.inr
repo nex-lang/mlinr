@@ -3,13 +3,11 @@ define i32 @_start(i32 %a) {
     %c = alloca i32
     %d = alloca i32
 
-
     store i32 81, i32 %d, align 4
 
     %b = add i32 -20, -81
 
     %c = load i32, i32 %b
-
 
     ret i32 0 
 }

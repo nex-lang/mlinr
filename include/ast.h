@@ -123,7 +123,7 @@ typedef struct InstrAlloca {
 
 typedef struct InstrReturn {
     size_t type;
-    AST_Operand val;
+    AST_Literal val;
 } InstrReturn;
 
 typedef struct InstrAssign {
