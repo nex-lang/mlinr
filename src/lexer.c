@@ -95,6 +95,11 @@ void token_free(Token* token) {
 
 
 Token* lexer_next_token(Lexer* lexer) {
+    /*
+    Moves forward in the token stream
+    return: next token in stream
+    */
+    
     Token* token;
     lexer_handle_fillers(lexer);
 
@@ -175,6 +180,10 @@ void lexer_advance(Lexer* lexer, uint8_t offset) {
 }
 
 void lexer_handle_error(Lexer* lexer) {
+    /*
+    Skips until filler values that signify the end of statment (called when errors are invoked)
+    */
+
     while (lexer->c != '\0' && lexer->c != ' ' && lexer->c != '\n' &&
            lexer->c != '\v' && lexer->c != '\t' && lexer->buf[lexer->i + 1] != '\0' &&
            lexer->i + 1 < lexer->buf_size) {
@@ -316,7 +325,6 @@ Token* lexer_handle_1char(Lexer* lexer) {
     return: [TOK_LPAREN->TOK_COLON], and literals
     */
 
-
     switch (lexer->c) {
         case '=':
             lexer_advance(lexer, 1); return lexer_token_init(lexer, "=", TOK_SEQ);
@@ -363,9 +371,6 @@ Token* lexer_handle_1char(Lexer* lexer) {
         case '-':
             return lexer_handle_numeric(lexer, true);
             break;
-        case '\'':
-            return lexer_process_single_quote(lexer);
-            break;
         case '\"':
             return lexer_process_double_quote(lexer);
             break;
@@ -378,6 +383,10 @@ Token* lexer_handle_1char(Lexer* lexer) {
 }
 
 void lexer_process_digits(Lexer* lexer, char** buf, bool has_decimal) {
+    /*
+    Processes digits whilst regulating certian formats: 1_00_00_1, 1.23 + D/d/f/F etc.
+    modifies: (char*) *buf
+    */
 
     while (isdigit(lexer->c) ||
            ((lexer->c == 'f' || lexer->c == 'F' || lexer->c == 'd' || lexer->c == 'D') && has_decimal == true)) {
@@ -449,17 +458,28 @@ uint8_t lexer_process_decimal_type(char* buf, uint8_t diadc) {
 }
 
 
-int is_within_int_range(int128_t val, int128_t min, int128_t max) {
+bool is_within_int_range(int128_t val, int128_t min, int128_t max) {
+    /*
+    Check that compares the provided value and max int value
+    return: true if it fits, false otherwise 
+    */
+
     if (val.high > max.high || (val.high == max.high && val.low > max.low)) {
-        return 0;
+        return false;
     }
     if (val.high < min.high || (val.high == min.high && val.low < min.low)) {
-        return 0;
+        return false;
     }
-    return 1;
+
+    return true;
 }
 
-int is_within_uint_range(uint128_t val, uint128_t max) {
+bool is_within_uint_range(uint128_t val, uint128_t max) {
+    /*
+    Check that compares the provided value and max unsigned int value
+    return: true if it fits, false otherwise 
+    */
+
     if (val.high > max.high || (val.high == max.high && val.low > max.low)) {
         return 0;
     }
@@ -467,6 +487,11 @@ int is_within_uint_range(uint128_t val, uint128_t max) {
 }
 
 uint8_t lexer_process_int_type(char* buf) {
+    /*
+    Processes what int type the lexed buffer falls in
+    return: TOK_L_SSINT -> TOK_L_LLINT
+    */
+
     char *endptr;
     int64_t signed_val;
     uint64_t usigned_val;
@@ -541,29 +566,12 @@ uint8_t lexer_process_int_type(char* buf) {
     return TOK_ERROR;
 }
 
-Token* lexer_process_single_quote(Lexer* lexer) {
-    lexer_advance(lexer, 1); // consume '
-
-    char* value = calloc(2, sizeof(char));
-    if (!value) {
-        exit(EXIT_FAILURE);
-    }
-    value[0] = lexer->c;
-    value[1] = '\0';
-
-    lexer_advance(lexer, 1); // consume char
-
-    if (lexer->c == '\'') {
-        lexer_advance(lexer, 1); // consume '
-        return lexer_token_init(lexer, value, TOK_L_CHAR);
-    }
-
-    REPORT_ERROR(lexer, "E_CHAR_TERMINATOR");
-    lexer_handle_error(lexer);
-    return lexer_next_token(lexer);
-}
-
 Token* lexer_process_double_quote(Lexer* lexer) {
+    /*
+    Processes single quote charachter openings
+    return: TOK_L_SSINT -> TOK_L_LLINT
+    */
+    
     lexer_advance(lexer, 1); // consume "
     
     char* value = calloc(1, sizeof(char) + 1);
@@ -610,6 +618,10 @@ struct ErrorTemplate templates[] = {
 };
 
 char* lexer_get_reference(Lexer* lexer) {
+    /*
+    Extracts the line where the current lexer index is (used for error reporting)
+    */
+
     size_t line_start = lexer->i;
 
     while (line_start > 0 && lexer->buf[line_start - 1] != '\n') {
@@ -623,21 +635,24 @@ char* lexer_get_reference(Lexer* lexer) {
     }
 
     size_t line_length = line_end - line_start;
-    char* line_content = (char*)malloc((line_length + 2) * sizeof(char));
+    char* line_content = (char*)malloc((line_length + 1) * sizeof(char));
 
     if (!line_content) {
-        free(line_content);
-        exit(EXIT_FAILURE);
+        exit(EXIT_FAILURE); 
     }
 
     strncpy(line_content, lexer->buf + line_start, line_length);
-
-    line_content[line_length] = '\0';
+    line_content[line_length] = '\0'; 
 
     return line_content;
 }
 
+
 void lexer_report_error(Lexer* lexer, char* error_code, ...) {
+    /*
+    Used to invoke a syntax error
+    */
+
     if (error_code[0] != 'U' && error_code[0] != 'E') {
         return;
     }
