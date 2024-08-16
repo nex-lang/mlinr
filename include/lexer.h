@@ -52,8 +52,8 @@ Token* lexer_handle_1char(Lexer* lexer);
 
 void lexer_process_digits(Lexer* lexer, char** buf, bool has_decimal);
 uint8_t lexer_process_decimal_type(char* buf, uint8_t diadc);
-int is_within_int_range(int128_t val, int128_t min, int128_t max);
-int is_within_uint_range(uint128_t val, uint128_t max);
+bool is_within_int_range(int128_t val, int128_t min, int128_t max);
+bool is_within_uint_range(uint128_t val, uint128_t max);
 uint8_t lexer_process_int_type(char* buf);
 Token* lexer_process_single_quote(Lexer* lexer);
 Token* lexer_process_double_quote(Lexer* lexer);
