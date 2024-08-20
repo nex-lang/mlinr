@@ -1,8 +1,7 @@
 ; adds two numbers 
 
 
-define i32 @add(i32 %a, i32 %b) {
-entry:
+define i32 @_add(i32 %a, i32 %b) {
     %result = add i32 %a, %b
     ret i32 %result
 }

@@ -58,12 +58,12 @@ void parser_parse(Parser* parser) {
     while (parser->cur->type != TOK_EOF) {
         switch (parser->cur->type) {
             case TOK_DEFINE:
-            
                 parser->tree->right = parser_parse_pinstruction(parser);
                 break;        
             default:
                 break;
         }
+
 
         if (!(parser->tree && parser->tree->right)) {
             break;
@@ -85,13 +85,14 @@ AST_Block parser_parse_instructions(Parser* parser) {
     block.instructions = malloc(sizeof(AST_Instruction));
     block.size = 0;
 
+    // printf("! %s\n", parser->cur->value);
 
     while (1) {
         if (parser->cur->type == TOK_RBRACK || parser->cur->type == TOK_EOF) {
             break;
-        }
-        
+        }        
         instr = parser_parse_instruction(parser);
+
 
         block.instructions = realloc(block.instructions, (sizeof(AST_Instruction) * (block.size + 1)));
 
@@ -104,6 +105,7 @@ AST_Block parser_parse_instructions(Parser* parser) {
         
         block.size += 1;
     }
+
 
     parser_expect(parser, TOK_RBRACK);
 
@@ -479,11 +481,12 @@ InstrReturn parser_parse_ret(Parser* parser) {
 
     InstrReturn instr = (InstrReturn){0};
 
+
     if (!IS_TYPEKW(parser->cur->type)) {
-        parser_consume(parser);
         instr.val.type = OPERAND_VOID;
         return instr;
     }
+
 
     instr.type = parser->cur->type;
     
@@ -610,8 +613,9 @@ InstrLoad parser_parse_load(Parser* parser) {
     return instr;
 }
 
-PrimInstrDefine parser_parse_define(Parser* parser) {
+PrimInstrDefine parser_parse_define(Parser* parser) {    
     parser_consume(parser);
+
 
     PrimInstrDefine instr;
 
@@ -621,6 +625,7 @@ PrimInstrDefine parser_parse_define(Parser* parser) {
     } else {
         instr.type = 0;
     }
+
 
 
     if (!parser_expect(parser, TOK_AT)) {
@@ -668,8 +673,8 @@ PrimInstrDefine parser_parse_define(Parser* parser) {
 
         parser_consume(parser);
 
-
         if (parser->cur->type == TOK_COMMA) {
+            parser_consume(parser);
             instr.args.size++;
             instr.args.id = realloc(instr.args.id, sizeof(char*) * instr.args.size);
             instr.args.type = realloc(instr.args.id, sizeof(uint8_t) * instr.args.size);
@@ -683,6 +688,7 @@ PrimInstrDefine parser_parse_define(Parser* parser) {
         instr.id = "\0";
         return instr;
     }
+
 
     instr.block = parser_parse_instructions(parser);    
 
@@ -720,6 +726,7 @@ void symtbl_insert(Parser* parser, Symbol* symbol, char* raw_symb) {
     }
 
     Symbol* checks = parser->tbl->symbol;
+    printf("%s\n", raw_symb);
     while (checks != NULL) {
         if (checks->id == symbol->id) {
             REPORT_ERROR(parser->lexer, "U_REDEF", raw_symb);

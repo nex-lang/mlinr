@@ -102,5 +102,6 @@ void generate(char* filename, char* arch) {
         riscv(gen->fp, 0, "_start:\n");
     #endif
 
+    parser_free(parser);
     gen_free(gen);
 }
