@@ -88,7 +88,6 @@ AST_Block parser_parse_instructions(Parser* parser) {
     // printf("! %s\n", parser->cur->value);
 
     while (1) {
-        printf("! %s %i %i\n", parser->cur->value, parser->cur->type, TOK_RBRACK);
         if (parser->cur->type == TOK_RBRACE || parser->cur->type == TOK_EOF) {
             break;
         }        
@@ -241,6 +240,10 @@ AST_Instruction parser_parse_instruction(Parser* parser) {
     case TOK_LOAD:
         instr.type = INSTR_LOAD;
         instr.data.load = parser_parse_load(parser);
+        break;
+    case TOK_CALL:
+        instr.type = INSTR_CALL;
+        instr.data.call = parser_parse_call(parser);
         break;
     default:
         break;
@@ -427,6 +430,64 @@ InstrBinOp parser_parse_binop(Parser* parser) {
 
     return instr;
 }
+
+InstrCall parser_parse_call(Parser* parser) {
+    /*
+    call @<function> (<args>)
+    call <type> @<function> (<args>)
+    */
+
+    parser_consume(parser);
+
+    InstrCall instr = {0};
+    Symbol* sym = NULL;
+
+
+    if (parser->cur->type == TOK_AT) {
+        parser_consume(parser);
+
+        if (parser->cur->type != TOK_IDEN) {
+            return instr;
+        }
+
+        char* iden = parser->cur->value;
+        parser_consume(parser);
+        sym = symtbl_lookup(parser->tbl, iden, 0);
+
+        if (sym == NULL) {
+            return instr; 
+        }
+
+        instr.iden = iden;
+        instr.type = 0;
+    } else if (IS_TYPEKW(parser->cur->type)) {
+        instr.type = parser->cur->type;
+        parser_consume(parser);
+
+        if (parser->cur->type != TOK_AT) {
+            return instr; 
+        }
+
+        parser_consume(parser);
+
+        if (parser->cur->type != TOK_IDEN) {
+            return instr; 
+        }
+
+        char* iden = parser->cur->value;
+        parser_consume(parser);
+        sym = symtbl_lookup(parser->tbl, iden, 0);
+
+        if (sym == NULL) {
+            return instr; 
+        }
+
+        instr.iden = iden;
+    }
+
+    return instr; 
+}
+
 
 InstrAssign parser_parse_assgn(Parser* parser) {
     /*
@@ -691,7 +752,8 @@ PrimInstrDefine parser_parse_define(Parser* parser) {
         return instr;
     }
 
-
+    
+    symtbl_insert(parser, symbol_init(instr.id, SYMBOL_FUNCTION, 0, 0), instr.id);
     instr.block = parser_parse_instructions(parser);    
 
 

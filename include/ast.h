@@ -126,6 +126,16 @@ typedef struct InstrReturn {
     AST_Literal val;
 } InstrReturn;
 
+typedef struct InstrCall {
+    char* iden;
+    uint8_t type;
+
+    struct {
+        AST_Operand** args;
+        size_t size;
+    } args;
+} InstrCall;
+
 typedef struct InstrAssign {
     int32_t iden;
     size_t size;
@@ -165,15 +175,7 @@ typedef struct AST_Instruction {
     union {
         InstrBinOp bin;
         InstrReturn ret;
-
-        struct {
-            char* function_name;
-            struct {
-                AST_Operand** args;
-                size_t size;
-            } args;
-        } call;
-
+        InstrCall call;
         InstrAlloca alloca;
         InstrAssign assgn;
         InstrStore store;

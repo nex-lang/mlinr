@@ -6,5 +6,8 @@ define i32 @x7c9e1eda (i32 %x5976c7, i32 %x5976e8) {
 define i32 @_start() {
 	%x5979bf = alloca i8
 	%x5979bf = add i8 10, 99
+
+	call @x7c9e1eda
+	
 	ret u8 0
 }

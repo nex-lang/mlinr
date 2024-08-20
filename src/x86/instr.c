@@ -24,6 +24,9 @@ void X86_instr(AST_Instruction statement, FILE* fp, X86Stack* stack, bool mep) {
         case INSTR_BINARY_OP:
             x86_binop(statement, fp, stack, NULL);
             break;
+        case INSTR_CALL:
+            x86_call(statement, fp, stack);
+            break;
         default:
             break;
     }
@@ -222,4 +225,12 @@ void x86_load(AST_Instruction statement, FILE* fp, X86Stack* stack) {
     char* refasm = get_refasmid(stack, instr.ptr_op, true);
 
     WO(fp, 1, "%s rax, %s\n", movasm, refasm);
+}
+
+void x86_call(AST_Instruction statement, FILE* fp, X86Stack* stack) {
+    InstrCall instr = statement.data.call;
+
+    if (instr.type == 0) {
+        WO(fp, 1, "call %s", instr.iden);
+    }
 }
