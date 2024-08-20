@@ -88,7 +88,8 @@ AST_Block parser_parse_instructions(Parser* parser) {
     // printf("! %s\n", parser->cur->value);
 
     while (1) {
-        if (parser->cur->type == TOK_RBRACK || parser->cur->type == TOK_EOF) {
+        printf("! %s %i %i\n", parser->cur->value, parser->cur->type, TOK_RBRACK);
+        if (parser->cur->type == TOK_RBRACE || parser->cur->type == TOK_EOF) {
             break;
         }        
         instr = parser_parse_instruction(parser);
@@ -107,7 +108,7 @@ AST_Block parser_parse_instructions(Parser* parser) {
     }
 
 
-    parser_expect(parser, TOK_RBRACK);
+    parser_expect(parser, TOK_RBRACE);
 
     return block;
 }
@@ -681,6 +682,7 @@ PrimInstrDefine parser_parse_define(Parser* parser) {
         }
     }
 
+
     parser_consume(parser);
 
     if (!parser_expect(parser, TOK_LBRACE)) {
@@ -691,6 +693,7 @@ PrimInstrDefine parser_parse_define(Parser* parser) {
 
 
     instr.block = parser_parse_instructions(parser);    
+
 
     return instr;
 }
