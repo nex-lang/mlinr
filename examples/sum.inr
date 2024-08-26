@@ -1,7 +1,14 @@
-; adds two numbers 
+; https://github.com/nex-lang/compiler/blob/v-beta/examples/types.nex
 
+define i32 @x7c9e1eda (i32 %x5976c7, i32 %x5976e8) {
+    %res = alloca i32
+    %res = add i32 %x5976c7, %x5976e8
+    ret i32 %res
+}
 
-define i32 @_add(i32 %a, i32 %b) {
-    %result = add i32 %a, %b
-    ret i32 %result
+define i32 @_start() {
+    %res = alloca i32
+    %res = call @x7c9e1eda(i32 320, i32 31231)
+
+    ret i32 0
 }

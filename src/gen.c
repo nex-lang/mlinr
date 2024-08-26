@@ -32,6 +32,8 @@ Generator* gen_init(const char* filename) {
         return NULL;
     }
 
+    gen->hex = hextbl_init();
+
     #if defined(TARGET_X86)
         gen->stack.x86 = x86_stack();
         WO(gen->fp, 0, "section .text\n");
@@ -56,7 +58,7 @@ void generate_program(AST_Node* node, Generator* gen) {
     if (!node) return;
 
     #if defined(TARGET_X86)
-        x86(node, gen->fp, gen->stack.x86);
+        x86(node, gen->fp, gen->stack.x86, gen->hex);
     #elif defined(TARGET_ARM)
         arm(gen->fp, 0, "_start:\n");
     #elif defined(TARGET_RISCV)
@@ -93,7 +95,7 @@ void generate(char* filename, char* arch) {
     base[len - 4] = '\0'; 
     
     #if defined(TARGET_X86)
-        x86(parser->root, gen->fp, gen->stack.x86);
+        x86(parser->root, gen->fp, gen->stack.x86, gen->hex);
         EXEC("nasm -f elf64 %s.asm -o %s.o", base, base);
         EXEC("ld -e _start %s.o -o %s", base, base);
     #elif defined(TARGET_ARM)

@@ -14,9 +14,14 @@ char* get_movasm(X86Stack* stack, AST_Operand* op) {
     }
 
     if (op->type == OPERAND_VARIABLE) {
-        size = x86_lookup_size(stack, op->value.variable);
-        if (size == (size_t)-1) {
-            return NULL;
+        size = x86_lookup_regarg(stack, op->value.variable);
+        if (size != -1) {
+            size = 64;
+        } else {
+            size = x86_lookup_size(stack, op->value.variable);
+            if (size == (size_t)-1) {
+                return NULL;
+            }
         }
     }
 
@@ -27,7 +32,9 @@ char* get_refasm(X86Stack* stack, AST_Operand* operand, char** reg, uint8_t op) 
     uint64_t off = 0;
     size_t size, d_kw = 0;
     char* kw = NULL;
+    bool isarg = false;
     char* result = (char*)malloc(64);
+
 
     if (result == NULL) return NULL;
 
@@ -63,16 +70,26 @@ char* get_refasm(X86Stack* stack, AST_Operand* operand, char** reg, uint8_t op) 
                 return NULL; 
         }
     } else if (operand->type == OPERAND_VARIABLE) {
-        size = x86_lookup_offset(stack, operand->value.variable);
-        d_kw = x86_lookup_size(stack, operand->value.variable);
-        if (size == (size_t)-1 || d_kw == (size_t)-1) {
-            free(result);
-            return NULL;
+        size = x86_lookup_regarg(stack, operand->value.variable);
+        if (size != -1) {
+            isarg = true;
+        } else {
+            size = x86_lookup_offset(stack, operand->value.variable);
+            d_kw = x86_lookup_size(stack, operand->value.variable);
+            if (size == (size_t)-1 || d_kw == (size_t)-1) {
+                free(result);
+                return NULL;
+            }
         }
     }
 
     if (operand->type == OPERAND_VARIABLE) {
-        snprintf(result, 64, "%s [rsp + %zu]", get_kwsz(d_kw), off);
+        if (isarg) {
+            snprintf(result, 64, "%s", x86_get_regarg(size));
+            size = 64;
+        } else {
+            snprintf(result, 64, "%s [rsp + %zu]", get_kwsz(d_kw), off);
+        }
     } else {
         snprintf(result, 64, "%ld", operand->value.literal.type == TOK_L_LUINT ? operand->value.literal.value.uint : operand->value.literal.value.int_);
     }
@@ -118,10 +135,10 @@ char* get_refasm(X86Stack* stack, AST_Operand* operand, char** reg, uint8_t op) 
         return NULL;
     }
 
+
+
     return result;
 }
-
-
 
 void promote_register(FILE* fp, int op1, int op2, char** reg1, char** reg2, bool sign) {
     const char* registers[8][4] = {

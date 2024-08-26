@@ -11,7 +11,7 @@
 #define MAX_DOUBLE_LIT_DIGITS 17
 
 #define IS_TYPEKW(type) \
-    (((type) >= TOK_I1 && (type) <= TOK_U64))
+    (((type) >= TOK_I1 && (type) <= TOK_DOUBLE))
 
 #define IS_PBOP(type) \
     (((type) >= TOK_ADD && (type) <= TOK_FCMP))
@@ -74,11 +74,9 @@ typedef struct Token {
         TOK_COND,           // cond (conditional branch)
         TOK_DECLARATION,    // declaration (generic, used for variable and function declarations)
         TOK_DEFINE,         // define (function definition)
-        TOK_DOUBLE,         // double (double precision floating point type)
         TOK_FPEXT,          // fpext (float-to-int extension cast)
         TOK_FPTOUI,         // fptoui (float-to-unsigned int cast)
         TOK_FPTOSI,         // fptosi (float-to-signed int cast)
-        TOK_FLOAT,          // float (floating point type)
         TOK_FUNC,           // function (function type)
         TOK_GLOBAL,         // global (for global variables)
         TOK_GETELEMENTPTR,  // getelementptr (pointer arithmetic instruction)
@@ -94,6 +92,8 @@ typedef struct Token {
         TOK_U16,            // u16 (16-bit unsigned integer type)
         TOK_U32,            // u32 (32-bit unsigned integer type)
         TOK_U64,            // u64 (64-bit unsigned integer type)
+        TOK_FLOAT,          // float (floating point type)
+        TOK_DOUBLE,         // double (double precision floating point type)
         TOK_LAND,           // land (logical AND operation)
         TOK_LNAND,          // lnand (logical NAND operation)
         TOK_LNOR,           // lnor (logical NOR operation)

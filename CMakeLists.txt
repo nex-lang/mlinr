@@ -10,7 +10,8 @@ set(GENERAL_SOURCES
     src/ast.c
     src/symtbl.c
     src/parser.c
-    src/gen.c      
+    src/gen.c 
+    src/hextbl.c
     src/main.c
 )
 
@@ -23,6 +24,7 @@ set(GENERAL_HEADERS
     include/symtbl.h
     include/parser.h
     include/gen.h      
+    include/hextbl.h      
 )
 
 set(X86_SOURCES

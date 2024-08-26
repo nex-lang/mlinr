@@ -131,7 +131,8 @@ typedef struct InstrCall {
     uint8_t type;
 
     struct {
-        AST_Operand** args;
+        AST_Operand* args;
+        uint32_t* sizes;
         size_t size;
     } args;
 } InstrCall;
@@ -161,6 +162,10 @@ typedef struct InstrLoad {
     uint64_t aln;
 } InstrLoad;
 
+typedef struct InstrGEP {
+
+} InstrGEP;
+
 typedef struct AST_Instruction {
     enum {
         INSTR_BINARY_OP,
@@ -180,6 +185,7 @@ typedef struct AST_Instruction {
         InstrAssign assgn;
         InstrStore store;
         InstrLoad load;
+        InstrGEP gep;
     } data;
 } AST_Instruction;
 

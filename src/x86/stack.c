@@ -9,8 +9,11 @@ X86Stack* x86_stack() {
 
     stack->off = 0;
     stack->size = 0;
+    stack->arg_size = 0;
     stack->lsize = 0;
+
     stack->vars = malloc(sizeof(X86StackVar));
+    stack->regargs = NULL;
 
     return stack;
 }
@@ -94,4 +97,20 @@ uint64_t x86_lookup_offset(X86Stack* stack, int32_t id) {
     fprintf(stderr, "Error: Try to acess non-existant variable\n");
 
     return 0;
+}
+
+int8_t x86_lookup_regarg(X86Stack* stack, int32_t id) {
+    for (size_t i = 0; i < stack->arg_size; i++) {
+        if (stack->regargs[i] == id) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+char* x86_get_regarg(uint8_t idx) {
+    char* regs[6] = { "rdi", "rsi", "rdx", "rcx", "r8", "r9" };
+    
+    return regs[idx];
 }

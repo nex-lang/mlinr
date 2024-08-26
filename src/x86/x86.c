@@ -4,7 +4,7 @@
 
 #include <string.h>
 
-void x86(AST_Node* node, FILE* fp, X86Stack* stack) {
+void x86(AST_Node* node, FILE* fp, X86Stack* stack, HexTable* hex) {
     if (node == NULL) {
         return;
     }
@@ -14,64 +14,18 @@ void x86(AST_Node* node, FILE* fp, X86Stack* stack) {
         case PINSTR_DEFINE:
             WO(fp, 0, "%s:\n", node->data.pinstruction.data.define.id);
 
-            if (strcmp(node->data.pinstruction.data.define.id, "_start") == 0) {
+            if (node->data.pinstruction.data.define.id[0] == 'x') {
+                int32_t id = hextbl_exhex(node->data.pinstruction.data.define.id);
+                hextbl_insert(hex, hymbol_init(id, HYMBOL_MEP));
+            } else if (strcmp(node->data.pinstruction.data.define.id, "_start") == 0) {
                 mep = true; // bootleg implementation of MEP
+                hextbl_insert(hex, hymbol_init(0, HYMBOL_MEP));
+            } else {
+                return;
             }
- 
-            for (size_t i = 0; i < node->data.pinstruction.data.define.block.size; i++) {
-                if (node->data.pinstruction.data.define.block.instructions[i].type == INSTR_ALLOCA) {
-                    uint64_t sz = 0;
-                    switch (node->data.pinstruction.data.define.block.instructions[i].data.alloca.type) {
-                        case ALLOCA_VAL:
-                            sz = type_to_size(node->data.pinstruction.data.define.block.instructions[i].data.alloca.data.var);
-                            break;
-                        case ALLOCA_ALVAL:
-                            sz = type_to_size(node->data.pinstruction.data.define.block.instructions[i].data.alloca.data.alvar.type);
-                            break;
-                        case ALLOCA_ARRAY:
-                            sz = node->data.pinstruction.data.define.block.instructions[i].data.alloca.data.array.val * type_to_size(node->data.pinstruction.data.define.block.instructions[i].data.alloca.data.array.type);
-                            break;
-                        case ALLOCA_ALARRAY:
-                            sz = node->data.pinstruction.data.define.block.instructions[i].data.alloca.data.alarray.val * type_to_size(node->data.pinstruction.data.define.block.instructions[i].data.alloca.data.alarray.type);
-                            break;
-                        default:
-                            break;
-                    }
-                    stack->size += sz;
-                    node->data.pinstruction.data.define.block.instructions[i].data.alloca.off = stack->size - sz;
-                    node->data.pinstruction.data.define.block.instructions[i].data.alloca.size = sz;
-                }
 
-                if (node->data.pinstruction.data.define.block.instructions[i].type == INSTR_ASSGN) {
-                    uint64_t sz2 = 0;
-                    switch (node->data.pinstruction.data.define.block.instructions[i].data.assgn.instr->data.alloca.type) {
-                        case ALLOCA_VAL:
-                            sz2 = type_to_size(node->data.pinstruction.data.define.block.instructions[i].data.assgn.instr->data.alloca.data.var);
-                            break;
-                        case ALLOCA_ALVAL:
-                            sz2 = type_to_size(node->data.pinstruction.data.define.block.instructions[i].data.assgn.instr->data.alloca.data.alvar.type);
-                            break;
-                        case ALLOCA_ARRAY:
-                            sz2 = node->data.pinstruction.data.define.block.instructions[i].data.assgn.instr->data.alloca.data.array.val * type_to_size(node->data.pinstruction.data.define.block.instructions[i].data.assgn.instr->data.alloca.data.array.type);
-                            break;
-                        case ALLOCA_ALARRAY:
-                            sz2 = node->data.pinstruction.data.define.block.instructions[i].data.assgn.instr->data.alloca.data.alarray.val * type_to_size(node->data.pinstruction.data.define.block.instructions[i].data.assgn.instr->data.alloca.data.alarray.type);
-                            break;
-                        default:
-                            break;
-                    }
-                    stack->size += sz2;
-                    node->data.pinstruction.data.define.block.instructions[i].data.alloca.off = stack->size - sz2;
-                    node->data.pinstruction.data.define.block.instructions[i].data.alloca.size = sz2;
-                
-                    if (node->data.pinstruction.data.define.block.instructions[i].data.assgn.instr->type == INSTR_BINARY_OP) {
-                        stack->size += node->data.pinstruction.data.define.block.instructions[i].data.assgn.instr->data.bin.size; 
-                    }
-
-                }
-
-                
-            }
+            x86_define_sz(stack, node->data.pinstruction.data.define);
+            x86_define_param(stack, node->data.pinstruction.data.define);
 
             WO(fp, 1, "mov rbp, rsp\n");
             WO(fp, 1, "and rbp, -16\n");   
@@ -87,5 +41,5 @@ void x86(AST_Node* node, FILE* fp, X86Stack* stack) {
             break;
     }
 
-    x86(node->right, fp, stack);
+    x86(node->right, fp, stack, hex);
 }

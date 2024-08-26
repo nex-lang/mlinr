@@ -6,6 +6,7 @@
 #define TARGET_RISCV 0
 
 #include "parser.h"
+#include "hextbl.h"
 
 #if defined(TARGET_X86)
     #include "x86/x86.h"
@@ -25,6 +26,7 @@ typedef struct {
     union {
         X86Stack* x86;
     } stack;
+    HexTable* hex;
 } Generator;
 
 Generator* gen_init(const char* filename);

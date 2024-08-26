@@ -85,8 +85,6 @@ AST_Block parser_parse_instructions(Parser* parser) {
     block.instructions = malloc(sizeof(AST_Instruction));
     block.size = 0;
 
-    // printf("! %s\n", parser->cur->value);
-
     while (1) {
         if (parser->cur->type == TOK_RBRACE || parser->cur->type == TOK_EOF) {
             break;
@@ -105,6 +103,8 @@ AST_Block parser_parse_instructions(Parser* parser) {
         
         block.size += 1;
     }
+
+    block.size -= 1;
 
 
     parser_expect(parser, TOK_RBRACE);
@@ -131,6 +131,7 @@ AST_Literal parser_parse_literal(Parser* parser) {
         lit.type = -1;
         return lit;
     }
+
 
     lit.type = parser->cur->type;
 
@@ -177,7 +178,6 @@ AST_Operand parser_parse_op(Parser* parser) {
         return op;
     }
 
-
     if (!parser_expect(parser, TOK_PER)) {
         op.type = OPERAND_ERR;
         return op;
@@ -188,17 +188,21 @@ AST_Operand parser_parse_op(Parser* parser) {
         return op; 
     }
 
-
     op.type = OPERAND_VARIABLE;
     
+    // printf("operator / block: %s | %d\n", parser->cur->value, parser->scope);
     Symbol* symb = symtbl_lookup(parser->tbl, parser->cur->value, parser->scope);
     if (symb == NULL) {
         op.type = OPERAND_ERR;
         REPORT_ERROR(parser->lexer, "U_USOUDV");
         return op;
     }
+    // printf("%d\n", symb->id);
+
+    
 
     op.value.variable = symb->id;
+
 
     parser_consume(parser);
 
@@ -261,6 +265,7 @@ InstrAlloca parser_parse_alloca(Parser* parser) {
     parser_consume(parser);
 
     InstrAlloca instr = (InstrAlloca){0};
+
 
     if (!IS_TYPEKW(parser->cur->type)) {
         REPORT_ERROR(parser->lexer, "E_TYPE_ALLOCA");
@@ -354,9 +359,8 @@ uint64_t parser_parse_ulit(Parser* parser, char* use) {
 
 InstrBinOp parser_parse_binop(Parser* parser) {
     /*
-    <pre_op> op <result type> <o1>, <o2>
+    <pre_op> op <result type> <o1>, <o2>  
     */
-
 
     InstrBinOp instr = (InstrBinOp){0};
     uint8_t cmp_prefix = 0;
@@ -417,12 +421,10 @@ InstrBinOp parser_parse_binop(Parser* parser) {
 
     instr.o1 = parser_parse_op(parser);
 
-
     if (!parser_expect(parser, TOK_COMMA)) {
         REPORT_ERROR(parser->lexer, "E_COMMA_AF_BINOP");
         return instr;
     }
-
 
     instr.o2 = parser_parse_op(parser);
 
@@ -485,6 +487,37 @@ InstrCall parser_parse_call(Parser* parser) {
         instr.iden = iden;
     }
 
+    if (!parser_expect(parser, TOK_LPAREN)) {
+        return instr; 
+    }
+
+    instr.args.args = malloc(sizeof(AST_Operand));
+    instr.args.sizes = malloc(sizeof(uint32_t));
+    instr.args.size = 0;
+
+    while (parser->cur->type != TOK_RPAREN) {
+        if (!IS_TYPEKW(parser->cur->type)) {
+            REPORT_ERROR(parser->lexer, "E_KW_PARAM");
+            return instr;
+        }
+
+        instr.args.sizes[instr.args.size] = parser->cur->type;
+        parser_consume(parser);
+
+        instr.args.args[instr.args.size] = parser_parse_op(parser);
+        if (instr.args.args[instr.args.size].type == OPERAND_ERR) {
+            REPORT_ERROR(parser->lexer, "E_VOP");
+            return instr;
+        }
+
+        if ((!parser_expect(parser, TOK_COMMA)) && parser->cur->type != TOK_RPAREN) {
+            REPORT_ERROR(parser->lexer, "E_COMMA_PARAM");
+            return instr;
+        }
+    }
+
+    parser_consume(parser);
+    
     return instr; 
 }
 
@@ -591,6 +624,10 @@ InstrStore parser_parse_store(Parser* parser) {
     instr.ptr_type = parser->cur->type;
     parser_consume(parser);
 
+    if (!parser_expect(parser, TOK_PTR)) {
+        REPORT_ERROR(parser->lexer, "E_PTR");
+        return instr;
+    }
 
     AST_Operand op = parser_parse_op(parser);
     if (op.type != OPERAND_VARIABLE) {
@@ -709,13 +746,13 @@ PrimInstrDefine parser_parse_define(Parser* parser) {
 
     ES(parser);
 
-    instr.args.id = malloc(sizeof(char*));
+    instr.args.id = malloc(sizeof(int32_t));
     instr.args.type = malloc(sizeof(uint8_t));
     instr.args.size = 0;
 
     while (parser->cur->type != TOK_RPAREN) {
         if (IS_TYPEKW(parser->cur->type)) {
-            instr.args.type[instr.args.size] = parser->cur->type;
+            instr.args.type[instr.args.size] = type_to_size(parser->cur->type);
             parser_consume(parser);
         }
 
@@ -727,19 +764,20 @@ PrimInstrDefine parser_parse_define(Parser* parser) {
             REPORT_ERROR(parser->lexer, "E_PARAM_ID");
         }
 
-        symtbl_insert(parser, symbol_init(
-            parser->cur->value, SYMBOL_VARIABLE, parser->scope, 
-            type_to_size(instr.args.type[instr.args.size])),
-            parser->cur->value
-        );
+        Symbol* sym = symbol_init(parser->cur->value, SYMBOL_VARIABLE, 
+            parser->scope, type_to_size(instr.args.type[instr.args.size]));
 
+
+        symtbl_insert(parser, sym, parser->cur->value);
+        instr.args.id[instr.args.size] = sym->id;
+        
         parser_consume(parser);
 
         if (parser->cur->type == TOK_COMMA) {
             parser_consume(parser);
-            instr.args.size++;
-            instr.args.id = realloc(instr.args.id, sizeof(char*) * instr.args.size);
-            instr.args.type = realloc(instr.args.id, sizeof(uint8_t) * instr.args.size);
+            instr.args.size += 1;
+            instr.args.id = realloc(instr.args.id, sizeof(int32_t) * instr.args.size);
+            instr.args.type = realloc(instr.args.type, sizeof(uint8_t) * instr.args.size);
         }
     }
 
@@ -791,7 +829,6 @@ void symtbl_insert(Parser* parser, Symbol* symbol, char* raw_symb) {
     }
 
     Symbol* checks = parser->tbl->symbol;
-    printf("%s\n", raw_symb);
     while (checks != NULL) {
         if (checks->id == symbol->id) {
             REPORT_ERROR(parser->lexer, "U_REDEF", raw_symb);

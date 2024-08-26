@@ -7,7 +7,7 @@
 
 char* keywords[NO_OF_KEYWORDS] = {
     "align", "add", "alloca", "bitcast", "br", "call", "cast", "cond", "declaration", "define", "double",
-    "eq", "fpext", "fptoui", "fptosi", "float", "function", "ge", "gt", "global", "getelementptr", "i1", "i8",
+    "eq", "fpext", "fptoui", "fptosi", "float", "function", "ge", "gt", "global", "geptr", "i1", "i8",
     "i16", "i32", "i64", "f16", "f32", "f64", "u8", "u16", "u32", "u64", "land", "lnand", "lnor", "lnot",
     "lor", "load", "label", "le", "lt", "mul", "ne", "nswitch", "or", "phinode", "pointer",
     "ret", "resume", "sdiv", "sext", "shl", "shr", "sub", "store", "struct", "switch", "trunc", "type",
@@ -374,6 +374,9 @@ Token* lexer_handle_1char(Lexer* lexer) {
         case '\"':
             return lexer_process_double_quote(lexer);
             break;
+        case '\'':
+            return lexer_process_single_quote(lexer);
+            break;
         default:
             break;
     }
@@ -486,6 +489,58 @@ bool is_within_uint_range(uint128_t val, uint128_t max) {
     return 1;
 }
 
+uint128_t strto128(char* str) {
+    uint128_t result = {0, 0};
+    const char *ptr = str;
+
+    while (*ptr) {
+        uint64_t new_low = result.low * 10;
+        uint64_t carry = new_low < result.low ? 1 : 0;
+
+        result.low = new_low + (*ptr - '0');
+        result.high = result.high * 10 + carry;
+
+        if (result.low < (*ptr - '0')) {
+            result.high++;
+        }
+
+        ptr++;
+    }
+
+    return result;
+}
+
+int128_t strto128_signed(char *str) {
+    int128_t result = {0, 0};
+    bool is_negative = false;
+    const char *ptr = (const char*)str;
+
+    if (*ptr == '-') {
+        is_negative = true;
+        ptr++;
+    } else if (*ptr == '+') {
+        ptr++;
+    }
+
+    while (*ptr) {
+        result.high = result.high * 10 + (result.low >> 60);
+        result.low = result.low * 10;
+
+        result.low += *ptr - '0';
+        ptr++;
+    }
+
+    if (is_negative) {
+        result.low = ~result.low + 1;
+        result.high = ~result.high;
+        if (result.low == 0) {
+            result.high += 1;
+        }
+    }
+
+    return result;
+}
+
 uint8_t lexer_process_int_type(char* buf) {
     /*
     Processes what int type the lexed buffer falls in
@@ -512,26 +567,21 @@ uint8_t lexer_process_int_type(char* buf) {
         }
 
         if (is_within_int_range(lsigned_val, int128_min, int128_max)) {
-            if (lsigned_val.high <= 0) {
-                if (signed_val >= INT8_MIN && signed_val <= INT8_MAX) {
-                    return TOK_L_SSINT;
-                } else if (signed_val >= INT16_MIN && signed_val <= INT16_MAX) {
-                    return TOK_L_SINT;
-                } else if (signed_val >= INT32_MIN && signed_val <= INT32_MAX) {
-                    return TOK_L_INT;
-                } else if (signed_val >= INT64_MIN && signed_val <= INT64_MAX) {
-                    return TOK_L_LINT;
-                }
-            } else if (lsigned_val.high > 0) {
-                return TOK_L_LLINT;
+            if (lsigned_val.high > 0) {
+                return TOK_L_LLUINT;
+            } else if (signed_val >= INT8_MIN && signed_val <= INT8_MAX) {
+                return TOK_L_SSINT;
+            } else if (signed_val >= INT16_MIN && signed_val <= INT16_MAX) {
+                return TOK_L_SINT;
+            } else if (signed_val >= INT32_MIN && signed_val <= INT32_MAX) {
+                return TOK_L_INT;
+            } else if (signed_val >= INT64_MIN && signed_val <= INT64_MAX) {
+                return TOK_L_LINT;
             }
         }        
         return TOK_ERROR;
     } else {
-        uint128_t unsigned_val;
-        strtouint128(buf, unsigned_val);
-
-        usigned_val = strtoull(buf, &endptr, 10);
+        uint128_t unsigned_val = strto128(buf);
         signed_val = strtoll(buf, &endptr, 10);
 
         if (endptr == buf || *endptr != '\0') {
@@ -541,7 +591,7 @@ uint8_t lexer_process_int_type(char* buf) {
         uint128_t uint128_max = { .high = 0xFFFFFFFFFFFFFFFF, .low = 0xFFFFFFFFFFFFFFFF };
 
         if (is_within_uint_range(unsigned_val, uint128_max)) {
-            if (unsigned_val.low > 0) {
+            if (unsigned_val.high > 0) {
                 return TOK_L_LLUINT;
             } else if (usigned_val >= 0 && usigned_val <= UINT8_MAX) {
                 return TOK_L_SSUINT;
@@ -566,10 +616,35 @@ uint8_t lexer_process_int_type(char* buf) {
     return TOK_ERROR;
 }
 
+Token* lexer_process_single_quote(Lexer* lexer) {
+    lexer_advance(lexer, 1); // consume '
+
+    char* value = calloc(2, sizeof(char));
+    if (!value) {
+        exit(EXIT_FAILURE);
+    }
+    value[0] = lexer->c;
+    value[1] = '\0';
+
+    lexer_advance(lexer, 1); // consume char
+
+    char next_char = (lexer_peek(lexer, 1))[0];
+
+    if (lexer->c == '\'') {
+        lexer_advance(lexer, 1); // consume '
+        return lexer_token_init(lexer, value, TOK_L_CHAR);
+    }
+
+    REPORT_ERROR(lexer, "E_CHAR_TERMINATOR");
+    lexer_handle_error(lexer);
+    return lexer_next_token(lexer);
+}
+
+
 Token* lexer_process_double_quote(Lexer* lexer) {
     /*
     Processes single quote charachter openings
-    return: TOK_L_SSINT -> TOK_L_LLINT
+    return: TOK_L_STRING
     */
     
     lexer_advance(lexer, 1); // consume "
