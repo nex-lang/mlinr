@@ -35,6 +35,10 @@ Generator* gen_init(const char* filename) {
     gen->hex = hextbl_init();
 
     #if defined(TARGET_X86)
+        WO(gen->fp, 0, "section .extern\n"); 
+        WO(gen->fp, 1, "extern __malloc\n"); 
+        WO(gen->fp, 1, "extern __free\n"); 
+
         gen->stack.x86 = x86_stack();
         WO(gen->fp, 0, "section .text\n");
         WO(gen->fp, 0, "global _start\n\n");
@@ -64,6 +68,11 @@ void generate_program(AST_Node* node, Generator* gen) {
     #elif defined(TARGET_RISCV)
         riscv(gen->fp, 0, "_start:\n");
     #endif
+}
+
+void gen_x86libs() {
+    EXEC("nasm -f elf64 src/x86/libs/stdmem.asm -o build/stdmem.o");
+    EXEC("ar rcs build/libstdmem.a build/stdmem.o");
 }
 
 void generate(char* filename, char* arch) {
@@ -96,8 +105,9 @@ void generate(char* filename, char* arch) {
     
     #if defined(TARGET_X86)
         x86(parser->root, gen->fp, gen->stack.x86, gen->hex);
+        gen_x86libs();
         EXEC("nasm -f elf64 %s.asm -o %s.o", base, base);
-        EXEC("ld -e _start %s.o -o %s", base, base);
+        EXEC("ld -e _start %s.o build/libstdmem.a -o %s", base, base);
     #elif defined(TARGET_ARM)
         arm(gen->fp, 0, "_start:\n");
     #elif defined(TARGET_RISCV)

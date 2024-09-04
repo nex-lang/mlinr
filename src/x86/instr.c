@@ -2,10 +2,11 @@
 #include "x86/arthlogic.h"
 #include "x86/mem.h"
 
-
 #include "token.h"
 #include "io.h"
 #include "parser.h"
+
+#include <string.h>
 
 void X86_instr(AST_Instruction statement, FILE* fp, X86Stack* stack, bool mep) {
     switch (statement.type) {
@@ -35,6 +36,7 @@ void X86_instr(AST_Instruction statement, FILE* fp, X86Stack* stack, bool mep) {
 
 void X86_return(AST_Instruction statement, FILE* fp, X86Stack* stack, bool mep) {
     // ! KW MOVING / HANDLED IN MEM.C
+    printf(">>>>>>%d\n", mep);
     if (mep) {
         WO(fp, 1, "\n\tmov rax, 60\n");
         // WO(fp, 1, "mov rdi, %s\n", statement.data.ret.val.value.literal.value.);
@@ -67,6 +69,8 @@ void X86_assgn(AST_Instruction statement, FILE* fp, X86Stack* stack) {
         WO(fp, 1, "mov rax, [rsp]\n");
     } else if (statement.data.assgn.instr->type == INSTR_LOAD) {
         x86_load(*statement.data.assgn.instr, fp, stack);
+    } else if (statement.data.assgn.instr->type == INSTR_CALL) {
+        x86_call(*statement.data.assgn.instr, fp, stack);
     }
 }
 
@@ -233,8 +237,27 @@ void x86_call(AST_Instruction statement, FILE* fp, X86Stack* stack) {
         // type = smth
     }
 
-    
 
+    if (strcmp(instr.iden, "__malloc") == 0) {
+        if (instr.args.size != 0) {
+            return;
+        }
+        
+        if (instr.args.args[0].type != OPERAND_LITERAL) {
+            return;
+        }
+
+
+        if (!(instr.args.args[0].value.literal.type == TOK_L_SSUINT ||
+            instr.args.args[0].value.literal.type == TOK_L_SUINT ||
+            instr.args.args[0].value.literal.type == TOK_L_UINT ||
+            instr.args.args[0].value.literal.type == TOK_L_LUINT)) {
+            return;
+        }
+
+        WO(fp, 1, "mov rdi, %lu\n", instr.args.args[0].value.literal.value.uint);
+        WO(fp, 1, "call __malloc\n");
+    }
     // args
 }
 

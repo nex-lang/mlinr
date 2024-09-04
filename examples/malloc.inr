@@ -1,0 +1,10 @@
+; https://github.com/nex-lang/compiler/blob/v-beta/examples/malloc.nex
+
+decl @__malloc(i64 __size)
+
+define i32 @_start() {
+    %string = alloca void
+
+    %string = call @__malloc(i32 64)
+    ret i32 0
+}

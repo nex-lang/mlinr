@@ -42,6 +42,7 @@ InstrStore parser_parse_store(Parser* parser);
 InstrLoad parser_parse_load(Parser* parser);
 
 PrimInstrDefine parser_parse_define(Parser* parser);
+PrimInstrDecl parser_parse_decl(Parser* parser);
 
 size_t type_to_size(unsigned int type);
 uint64_t parser_parse_ulit(Parser* parser, char* use);

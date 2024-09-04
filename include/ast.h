@@ -18,27 +18,40 @@ typedef struct AST_Block {
     size_t size;
 } AST_Block;
 
+typedef struct PrimInstrDecl {
+    char* id;
+    int type;
+
+    struct {
+        size_t size;
+        int32_t* id;
+        uint8_t* type;
+    } args; 
+} PrimInstrDecl;
+
 typedef struct PrimInstrDefine {
     char* id;
     int type;
 
-    struct args {
+    struct {
         size_t size;
         int32_t* id;
         uint8_t* type;
     } args;
 
-    AST_Block block; // This can now be properly resolved
+    AST_Block block;
 } PrimInstrDefine;
 
 typedef struct AST_PrimInstruction {
     enum {
         PINSTR_ROOT,
-        PINSTR_DEFINE
+        PINSTR_DEFINE,
+        PINSTR_DECL
     } type;
 
     union {
         PrimInstrDefine define;
+        PrimInstrDecl decl;
     } data;
 } AST_PrimInstruction;
 

@@ -1,5 +1,7 @@
 #include "parser.h"
 
+#include <string.h>
+
 Parser* parser_init(char* filename) {
     /*
     Initializes the parser
@@ -56,13 +58,7 @@ void parser_consume(Parser* parser) {
 
 void parser_parse(Parser* parser) {
     while (parser->cur->type != TOK_EOF) {
-        switch (parser->cur->type) {
-            case TOK_DEFINE:
-                parser->tree->right = parser_parse_pinstruction(parser);
-                break;        
-            default:
-                break;
-        }
+        parser->tree->right = parser_parse_pinstruction(parser);
 
 
         if (!(parser->tree && parser->tree->right)) {
@@ -116,8 +112,19 @@ AST_Block parser_parse_instructions(Parser* parser) {
 AST_Node* parser_parse_pinstruction(Parser* parser) {
     AST_Node* node = ast_init(PRIM_INSTRUCTION);
 
-    node->data.pinstruction.type = PINSTR_DEFINE;            
-    node->data.pinstruction.data.define = parser_parse_define(parser);            
+    switch (parser->cur->type) {
+    case TOK_DECL:
+        node->data.pinstruction.type = PINSTR_DECL;            
+        node->data.pinstruction.data.decl = parser_parse_decl(parser);            
+        break;
+    case TOK_DEFINE:
+        node->data.pinstruction.type = PINSTR_DEFINE;            
+        node->data.pinstruction.data.define = parser_parse_define(parser);            
+        break;
+    default:
+        break;
+    }
+
 
     return node;
 }
@@ -224,7 +231,6 @@ AST_Instruction parser_parse_instruction(Parser* parser) {
     }
 
     switch (parser->cur->type) {
-
     case TOK_ALLOCA:
         instr.type = INSTR_ALLOCA;
         instr.data.alloca = parser_parse_alloca(parser);
@@ -443,7 +449,7 @@ InstrCall parser_parse_call(Parser* parser) {
 
     InstrCall instr = {0};
     Symbol* sym = NULL;
-
+    char* iden;
 
     if (parser->cur->type == TOK_AT) {
         parser_consume(parser);
@@ -452,7 +458,7 @@ InstrCall parser_parse_call(Parser* parser) {
             return instr;
         }
 
-        char* iden = parser->cur->value;
+        iden = strdup(parser->cur->value);
         parser_consume(parser);
         sym = symtbl_lookup(parser->tbl, iden, 0);
 
@@ -476,7 +482,7 @@ InstrCall parser_parse_call(Parser* parser) {
             return instr; 
         }
 
-        char* iden = parser->cur->value;
+        iden = strdup(parser->cur->value);
         parser_consume(parser);
         sym = symtbl_lookup(parser->tbl, iden, 0);
 
@@ -490,6 +496,7 @@ InstrCall parser_parse_call(Parser* parser) {
     if (!parser_expect(parser, TOK_LPAREN)) {
         return instr; 
     }
+
 
     instr.args.args = malloc(sizeof(AST_Operand));
     instr.args.sizes = malloc(sizeof(uint32_t));
@@ -517,7 +524,6 @@ InstrCall parser_parse_call(Parser* parser) {
     }
 
     parser_consume(parser);
-    
     return instr; 
 }
 
@@ -559,6 +565,10 @@ InstrAssign parser_parse_assgn(Parser* parser) {
         return instr;
     }
 
+    if (instr.instr->type == INSTR_CALL) {
+        printf("%s\n", instr.instr->data.call.iden);
+    }
+
     sym = symtbl_lookup(parser->tbl, iden, parser->scope);
     
     if (sym == NULL) {
@@ -576,18 +586,16 @@ InstrReturn parser_parse_ret(Parser* parser) {
 
     InstrReturn instr = (InstrReturn){0};
 
-
     if (!IS_TYPEKW(parser->cur->type)) {
         instr.val.type = OPERAND_VOID;
         return instr;
     }
 
-
     instr.type = parser->cur->type;
-    
+
     parser_consume(parser);
-    
-    instr.val =  parser_parse_literal(parser);
+
+    instr.val = parser_parse_literal(parser);
     
     return instr;
 }
@@ -715,7 +723,6 @@ InstrLoad parser_parse_load(Parser* parser) {
 PrimInstrDefine parser_parse_define(Parser* parser) {    
     parser_consume(parser);
 
-
     PrimInstrDefine instr;
 
     if (IS_TYPEKW(parser->cur->type)) {
@@ -794,6 +801,81 @@ PrimInstrDefine parser_parse_define(Parser* parser) {
     symtbl_insert(parser, symbol_init(instr.id, SYMBOL_FUNCTION, 0, 0), instr.id);
     instr.block = parser_parse_instructions(parser);    
 
+
+    return instr;
+}
+
+PrimInstrDecl parser_parse_decl(Parser* parser) {
+    parser_consume(parser);
+
+    PrimInstrDecl instr;
+
+    if (IS_TYPEKW(parser->cur->type)) {
+        instr.type = parser->cur->type;
+        parser_consume(parser);
+    } else {
+        instr.type = 0;
+    }
+
+
+
+    if (!parser_expect(parser, TOK_AT)) {
+        REPORT_ERROR(parser->lexer, "E_SYMBOL_AF_DEFINEKW");
+        instr.id = "\0";
+        return instr;
+    }
+
+    if (parser->cur->type == TOK_IDEN) {
+        instr.id = parser->cur->value;
+        parser_consume(parser);
+    }
+
+    if (!parser_expect(parser, TOK_LPAREN)) {
+        REPORT_ERROR(parser->lexer, "E_SYMBOL_PARAMS");
+        instr.id = "\0";
+        return instr;
+    }
+
+    ES(parser);
+
+    instr.args.id = malloc(sizeof(int32_t));
+    instr.args.type = malloc(sizeof(uint8_t));
+    instr.args.size = 0;
+
+    while (parser->cur->type != TOK_RPAREN) {
+        if (IS_TYPEKW(parser->cur->type)) {
+            instr.args.type[instr.args.size] = type_to_size(parser->cur->type);
+            parser_consume(parser);
+        }
+
+        if (parser->cur->type == TOK_PER) {
+            parser_consume(parser);
+        }
+
+        if (parser->cur->type != TOK_IDEN) {
+            REPORT_ERROR(parser->lexer, "E_PARAM_ID");
+        }
+
+        Symbol* sym = symbol_init(parser->cur->value, SYMBOL_VARIABLE, 
+            parser->scope, type_to_size(instr.args.type[instr.args.size]));
+
+
+        symtbl_insert(parser, sym, parser->cur->value);
+        instr.args.id[instr.args.size] = sym->id;
+        
+        parser_consume(parser);
+
+        if (parser->cur->type == TOK_COMMA) {
+            parser_consume(parser);
+            instr.args.size += 1;
+            instr.args.id = realloc(instr.args.id, sizeof(int32_t) * instr.args.size);
+            instr.args.type = realloc(instr.args.type, sizeof(uint8_t) * instr.args.size);
+        }
+    }
+
+    parser_consume(parser);
+
+    symtbl_insert(parser, symbol_init(instr.id, SYMBOL_FUNCTION, 0, 0), instr.id);
 
     return instr;
 }

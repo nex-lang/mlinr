@@ -35,6 +35,7 @@ void gen_free(Generator* gen);
 void gen_stmt(AST_Instruction statement, Generator* gen);
 void generate_program(AST_Node* node, Generator* gen);
 
+void gen_x86libs();
 void generate(char* filename, char* arch);
 
 

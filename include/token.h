@@ -1,7 +1,7 @@
 #ifndef TOKEN_H
 #define TOKEN_H
 
-#define NO_OF_KEYWORDS 68
+#define NO_OF_KEYWORDS 69
 #define KEYWORDS keywords
 #define MAX_KEYWORD_LEN 14
 
@@ -72,7 +72,7 @@ typedef struct Token {
         TOK_CALL,           // call (function call instruction)
         TOK_CAST,           // cast (cast operation)
         TOK_COND,           // cond (conditional branch)
-        TOK_DECLARATION,    // declaration (generic, used for variable and function declarations)
+        TOK_DECL,    // decl (generic, used for variable and function declarations)
         TOK_DEFINE,         // define (function definition)
         TOK_FPEXT,          // fpext (float-to-int extension cast)
         TOK_FPTOUI,         // fptoui (float-to-unsigned int cast)
@@ -88,6 +88,7 @@ typedef struct Token {
         TOK_F16,            // f16 (half precision)
         TOK_F32,            // f32 (float precision)
         TOK_F64,            // f64 (double precision)
+        TOK_VOID,           // void 
         TOK_U8,             // u8 (8-bit unsigned integer type)
         TOK_U16,            // u16 (16-bit unsigned integer type)
         TOK_U32,            // u32 (32-bit unsigned integer type)
