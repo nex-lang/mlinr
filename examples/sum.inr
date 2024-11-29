@@ -1,19 +1,12 @@
 ; https://github.com/nex-lang/compiler/blob/v-beta/examples/types.nex
-
-decl @__malloc(i64 __size)
-
 define i32 @x7c9e1eda (i32 %x5976c7, i32 %x5976e8) {
     %res = alloca i32
     %res = add i32 %x5976c7, %x5976e8
+
     ret i32 %res
 }
 
 define i32 @_start() {
     %res = alloca i32
-    %string = alloca void
-    %res = call @x7c9e1eda(i32 320, i32 31231)
-
-    %string = call @__malloc(i32 64)
-
     ret i32 0
 }

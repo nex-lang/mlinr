@@ -18,6 +18,7 @@ fi
 if [ "$1" == "-C" ] || [ "$1" == "--clean" ]; then
     printf "${MAGENTA}${BRIGHT}[BUILD.SH]${NORMAL} FORCE CLEARING BUILD DIRECTORY\n"
     rm -rf build/
+    rm -rf .tmp/
     exit 0
 fi
 
@@ -29,6 +30,7 @@ fi
 
 if [ "$1" == "-D" ] || [ "$1" == "--debug" ] || [ "$2" == "-D" ] || [ "$2" == "--debug" ]; then
     printf "${MAGENTA}${BRIGHT}[BUILD.SH]${NORMAL} ${GREEN}LATEST VERIFIED VERSION ${CURRENT_VERSION}${NORMAL}: BUILDING IN DEBUG MODE\n"
+    mkdir build
     cmake -B build -DCMAKE_BUILD_TYPE=Debug
     cd build/ && make
 elif [ "$1" == "-R" ] || [ "$1" == "--release" ] || [ "$2" == "-R" ] || [ "$2" == "--release" ]; then

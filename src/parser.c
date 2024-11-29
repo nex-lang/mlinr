@@ -87,7 +87,6 @@ AST_Block parser_parse_instructions(Parser* parser) {
         }        
         instr = parser_parse_instruction(parser);
 
-
         block.instructions = realloc(block.instructions, (sizeof(AST_Instruction) * (block.size + 1)));
 
         if (block.instructions == NULL) {
@@ -96,11 +95,8 @@ AST_Block parser_parse_instructions(Parser* parser) {
         }
 
         block.instructions[block.size] = instr;
-        
         block.size += 1;
     }
-
-    block.size -= 1;
 
 
     parser_expect(parser, TOK_RBRACE);
@@ -210,7 +206,6 @@ AST_Operand parser_parse_op(Parser* parser) {
 
     op.value.variable = symb->id;
 
-
     parser_consume(parser);
 
     return op;
@@ -226,7 +221,7 @@ AST_Instruction parser_parse_instruction(Parser* parser) {
 
     if (IS_PBOP(parser->cur->type)) {
         instr.type = INSTR_BINARY_OP;
-        instr.data.bin =  parser_parse_binop(parser);
+        instr.data.bin = parser_parse_binop(parser);
         return instr;
     }
 
@@ -284,6 +279,7 @@ InstrAlloca parser_parse_alloca(Parser* parser) {
     if (!parser_expect(parser, TOK_COMMA)) {
         instr.type = ALLOCA_VAL;
         instr.data.var = type;
+
         return instr;
     }
 
@@ -594,8 +590,9 @@ InstrReturn parser_parse_ret(Parser* parser) {
     instr.type = parser->cur->type;
 
     parser_consume(parser);
+    printf("%s\n", parser->cur->value);
 
-    instr.val = parser_parse_literal(parser);
+    instr.val = parser_parse_op(parser);
     
     return instr;
 }

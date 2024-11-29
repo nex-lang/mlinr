@@ -35,19 +35,18 @@ Generator* gen_init(const char* filename) {
     gen->hex = hextbl_init();
 
     #if defined(TARGET_X86)
-        WO(gen->fp, 0, "section .extern\n"); 
-        WO(gen->fp, 1, "extern __malloc\n"); 
-        WO(gen->fp, 1, "extern __free\n"); 
 
         gen->stack.x86 = x86_stack();
         WO(gen->fp, 0, "section .text\n");
-        WO(gen->fp, 0, "global _start\n\n");
+        WO(gen->fp, 1, "global _start\n\n");
+        // WO(gen->fp, 1, "extern __malloc\n"); 
+        // WO(gen->fp, 1, "extern __free\n"); 
     #elif defined(TARGET_ARM)
         WO(gen->fp, 0, ".text\n");
-        WO(gen->fp, 0, ".global _start\n\n");
+        WO(gen->fp, 1, ".global _start\n\n");
     #elif defined(TARGET_RISCV)
         WO(gen->fp, 0, ".section .text\n");
-        WO(gen->fp, 0, ".globl _start\n\n");
+        WO(gen->fp, 1, ".globl _start\n\n");
     #endif
 
     return gen;
@@ -107,7 +106,7 @@ void generate(char* filename, char* arch) {
         x86(parser->root, gen->fp, gen->stack.x86, gen->hex);
         gen_x86libs();
         EXEC("nasm -f elf64 %s.asm -o %s.o", base, base);
-        EXEC("ld -e _start %s.o build/libstdmem.a -o %s", base, base);
+        EXEC("ld -m elf_x86_64 -o %s %s.o", base, base);
     #elif defined(TARGET_ARM)
         arm(gen->fp, 0, "_start:\n");
     #elif defined(TARGET_RISCV)

@@ -136,7 +136,7 @@ typedef struct InstrAlloca {
 
 typedef struct InstrReturn {
     size_t type;
-    AST_Literal val;
+    AST_Operand val;
 } InstrReturn;
 
 typedef struct InstrCall {

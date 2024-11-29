@@ -9,6 +9,8 @@
 #include <string.h>
 
 void X86_instr(AST_Instruction statement, FILE* fp, X86Stack* stack, bool mep) {
+    printf("[%d]state: %d\n", mep, statement.type);
+
     switch (statement.type) {
         case INSTR_RETURN:
             X86_return(statement, fp, stack, mep);
@@ -36,7 +38,8 @@ void X86_instr(AST_Instruction statement, FILE* fp, X86Stack* stack, bool mep) {
 
 void X86_return(AST_Instruction statement, FILE* fp, X86Stack* stack, bool mep) {
     // ! KW MOVING / HANDLED IN MEM.C
-    printf(">>>>>>%d\n", mep);
+    printf("-> %i\n", mep);
+
     if (mep) {
         WO(fp, 1, "\n\tmov rax, 60\n");
         // WO(fp, 1, "mov rdi, %s\n", statement.data.ret.val.value.literal.value.);

@@ -117,6 +117,7 @@ Token* lexer_next_token(Lexer* lexer) {
         }
     }
 
+
     return token;
 }
 
@@ -274,7 +275,7 @@ Token* lexer_handle_numeric(Lexer* lexer, bool is_negative) {
     Identifies and creates numeric tokens 
     return: numeric tokens [TOK_L_SSINT-> TOK_L_DOUBLE]
     */
-   
+
     int type = TOK_ERROR;
     __uint8_t npre_decimal = 0;
     char* buf = calloc(2, sizeof(char));
@@ -291,6 +292,7 @@ Token* lexer_handle_numeric(Lexer* lexer, bool is_negative) {
 
     lexer_process_digits(lexer, &buf, false);
     type = lexer_process_int_type(buf);
+
 
     if (lexer->c == '.') {
         // register decimal
