@@ -8,7 +8,7 @@
 
 ## Getting Started
 
-**NOTE:** AS OF NOW, MLINR IS INTEGRATED AND PURELEY USED AS A MODULE FOR THE [NEX COMPILER](https://github.com/nex-lang/compiler). Stay tuned for updates on installation instructions and [documentation](https://nex-lang.web.app/mlinr/) as MLINR evolves.
+**NOTE:** AS OF NOW, MLINR IS INTEGRATED AND PURELEY USED AS A MODULE FOR THE [NEX COMPILER](https://github.com/nex-lang/compiler). Stay tuned for updates on installation instructions and [documentation](https://nex-lang.web.app/docs/extra/) as MLINR evolves.
 
 ## Contributing
 
